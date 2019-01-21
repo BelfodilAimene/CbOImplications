@@ -13,7 +13,7 @@ class CbOI(Enumerator) :
         
     def _start(self, *args,**kwargs):
         # TODO: reorder the data such that alphabet total order is a linearization of the dag order
-
+        
         self.nb_closure_computation = 1 #Computing the closure of the emptyset
         for result in self.dfs(CbOIItemset.bottom_itemset(self)):
             yield result
@@ -24,11 +24,10 @@ class CbOI(Enumerator) :
         for addable in itemset.addables - prohibitted :
             next_closed = itemset.add_and_close(addable, prohibitted)
             self.nb_closure_computation+=1
-            prohibitted.add(addable)
-            
             if next_closed != None:
                 for result in self.dfs(next_closed, set(prohibitted)):
                     yield result
+            prohibitted.add(addable)
 
     def __str__(self):
         return "Close-By-One-Implications"
@@ -63,28 +62,37 @@ class CbOIItemset:
         # items that are will become addable perhaps in the next step:
         #    They are items not belonging neither to the itemset nor to addables
         #    having at least one parent in the itemset
-        #   (set)
-        self.future_addables =future_addables
+        #    (map[addable]int)
+        self.future_addables = future_addables
 
-    def add(self, item):
-        self.itemset.add(item)
-        self.extent &= self._enumerator.data.vertical[item]
+    def add(self, item, update_extent = True):
+	self.itemset.add(item)
+        if update_extent:
+            self.extent &= self._enumerator.data.vertical[item]
+
         self.addables.remove(item)
         self.leaves.add(item)
-        
         self.leaves -= self._enumerator.implications.parents[item]
-        self.future_addables |= self._enumerator.implications.childs[item]
-        
 
-        for future_addable in set(self.future_addables):
-            if self._enumerator.implications.parents[future_addable] <= self.itemset:
-                self.future_addables.remove(future_addable)
-                self.addables.add(future_addable)
+        for child in self._enumerator.implications.childs[item]:
+            ancient_value = self.future_addables.get(child, -1)
+            if ancient_value == -1:
+                parent_degrees = len(self._enumerator.implications.parents[child])
+                
+                if parent_degrees == 1:
+                    self.addables.add(child)
+                else:
+                    self.future_addables[child] = parent_degrees
+            elif ancient_value == 1:
+                self.addables.add(item)
+                del self.future_addables[child]
+            else:
+                self.future_addables[child] = ancient_value - 1
 
         return self
 
     def copy(self):
-        return CbOIItemset(set(self.itemset), set(self.extent), set(self.leaves), set(self.addables), set(self.future_addables), self._enumerator)
+        return CbOIItemset(set(self.itemset), set(self.extent), set(self.leaves), set(self.addables), dict(self.future_addables), self._enumerator)
 
     def add_and_close(self, item, prohibitted = set()):
         # return the closure of the current closed itemset union the new item
@@ -99,7 +107,7 @@ class CbOIItemset:
         while addables_to_test :
             i = addables_to_test.pop()
             if self._enumerator.data.vertical[i] >= result.extent :
-                result.add(i)
+                result.add(i, update_extent= False)
                 addables_to_test |= result.addables
 
         return result
@@ -109,14 +117,7 @@ class CbOIItemset:
 
     @staticmethod
     def bottom_itemset(_enumerator):
-        # We are always working under the hypothesis that the dataset is column-clarified (column-reduced)
-        future_addables = set()
-        for root in _enumerator.implications.roots:
-            future_addables |= _enumerator.implications.childs[root]
-
-        
-        
-        bottom_itemset = CbOIItemset(set(),set(range(_enumerator.data.n)), set(), set(_enumerator.implications.roots), future_addables, _enumerator)
+        bottom_itemset = CbOIItemset(set(),set(range(_enumerator.data.n)), set(), set(_enumerator.implications.roots), dict(), _enumerator)
 
         """ If the implications are computed from the dataset and the dataset is column-clarified then this is correct 
         if len(_enumerator.roots)==1 and len(_enumerator.data.vertical[root])==_enumerator.data.n :
