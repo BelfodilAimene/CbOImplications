@@ -60,14 +60,14 @@ class DataWithImplication:
             
 
     @staticmethod
-    def from_data(data, implication_file_path = None, compute_implications = True):
+    def from_data(data, implication_file_path = None, compute_implications = True, separator = "\t"):
         if implication_file_path == None:
             if compute_implications:
                 return DataWithImplication.compute_reversed_implications_and_data(data)
             else:
                 return DataWithImplication.no_implications(data)
         else :
-            return DataWithImplication.read_reversed_implications_and_data(data, implication_file_path)
+            return DataWithImplication.read_reversed_implications_and_data(data, implication_file_path, separator = separator)
 
     @staticmethod    
     def compute_reversed_implications_and_data(data):
@@ -76,8 +76,8 @@ class DataWithImplication:
         return DataWithImplication(data,childs,parents)
 
     @staticmethod
-    def read_reversed_implications_and_data(data, implication_file_path):
-        implications = DataWithImplication.read_implications(data, implication_file_path)
+    def read_reversed_implications_and_data(data, implication_file_path, separator = "\t"):
+        implications = DataWithImplication.read_implications(data, implication_file_path, separator = separator)
         equivalent_items = tarjan({i:childs for i,childs in enumerate(implications)})
         equivalent_items = sorted(map(sorted,equivalent_items), key=lambda element: element[0])
         old_to_new_indice = [0 for i in range(data.m)]
@@ -107,7 +107,7 @@ class DataWithImplication:
         return DataWithImplication(semi_reduced_data, childs, parents)
 
     @staticmethod
-    def read_implications(data, from_file):
+    def read_implications(data, from_file, separator = "\t"):
         """
         return one list of sets:
             for the set of position i the sets regroups implications which premises is item i
@@ -122,7 +122,7 @@ class DataWithImplication:
             with open(from_file, 'r') as f:
                 all_lines = f.readlines()
                 for line in all_lines:
-                    implication = line.strip().replace("\n", "").split(" ")
+                    implication = line.strip().replace("\n", "").split(separator)
                     if len(implication) != 2:
                         raise Exception("Implication need to be of the form 'a b'")
                     if implication[0] not in symbol_to_indice or implication[1] not in symbol_to_indice:
@@ -174,22 +174,22 @@ class DataWithImplication:
         return DataWithImplication(data,childs,parents)
 
     @staticmethod
-    def read(data_file_path, implication_file_path = None, compute_implications = True):
+    def read(data_file_path, implication_file_path = None, compute_implications = True, separator = "\t"):
         """
         @param data_file_path : itemset file path
         @param implication_file_path: implications file path
         @param compute_implications: if implication_file_path is None wether or note compute the set of implication using the dataset
         """
-        data = Data.read(data_file_path)
-        return DataWithImplication.from_data(data, implication_file_path, compute_implications)
+        data = Data.read(data_file_path, separator = separator)
+        return DataWithImplication.from_data(data, implication_file_path, compute_implications, separator = separator)
 
-    def write(self, data_file_path, implication_file_path):
-        self.data.write(data_file_path)
+    def write(self, data_file_path, implication_file_path, separator = "\t"):
+        self.data.write(data_file_path, separator = separator)
         with open(implication_file_path, 'w') as the_file:
             for i,itemset in enumerate(self.parents):
                 if len(itemset)==0 : continue
                 for parent in itemset:
-                    the_file.write(self.data.alphabet[i]+" "+self.data.alphabet[parent]+'\n')
+                    the_file.write(self.data.alphabet[i]+separator+self.data.alphabet[parent]+'\n')
 
     @staticmethod
     def get_parents_from_childs_or_childs_from_parents(pointers):

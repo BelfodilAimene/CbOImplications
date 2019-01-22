@@ -114,11 +114,11 @@ class Data :
         
 
     @staticmethod
-    def read(itemsets_file):
+    def read(itemsets_file, separator = "\t"):
         with open(itemsets_file):
             with open(itemsets_file, 'r') as f:
                 all_lines = f.readlines()
-                itemsets = map(lambda e : frozenset() if e in (" \n"," ") else frozenset(map(str,e.replace("\n","").split(" "))),all_lines)
+                itemsets = map(lambda e : frozenset() if e in (" \n",separator) else frozenset(map(str,e.replace("\n","").split(separator))),all_lines)
 
         # compute alphabet
         alphabet = set()
@@ -133,14 +133,14 @@ class Data :
 
         return Data(alphabet, horizontal, vertical)
 
-    def write(self, file_path):
+    def write(self, file_path, separator = "\t"):
         with open(file_path, 'w') as the_file:
             for itemset in self.horizontal:
-                the_file.write(self._str_itemset(itemset)+'\n')
+                the_file.write(self._str_itemset(itemset, separator = separator)+'\n')
 
-    def _str_itemset(self, itemset):
-        return " ".join(self.alphabet[i] for i in sorted(itemset))
+    def _str_itemset(self, itemset, separator = " "):
+        return separator.join(self.alphabet[i] for i in sorted(itemset))
 
     def __str__(self):
-        return "\n".join([self._str_itemset(itemset) for itemset in self.horizontal])
+        return "\n".join([self._str_itemset(itemset, separator = " ") for itemset in self.horizontal])
         

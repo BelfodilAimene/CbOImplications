@@ -52,11 +52,12 @@ class HMTData :
             prefix+="."+element
             result.add(prefix)
         return result
+
     @staticmethod
-    def read(hmt_file_path):
+    def read(hmt_file_path, separator = "\t"):
         with open(hmt_file_path, 'r') as f:
             all_lines = f.readlines()
-            itemsets = map(lambda e : frozenset() if e in (" \n"," ") else frozenset(map(str,e.replace("\n","").split(" "))),all_lines)
+            itemsets = map(lambda e : frozenset() if e in (" \n",separator," ") else frozenset(map(str,e.replace("\n","").split(separator))),all_lines)
         return HMTData(itemsets)
     
 
