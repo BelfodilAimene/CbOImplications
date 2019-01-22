@@ -33,6 +33,9 @@ implications_file = "data/hmt/deputies/input.implications"
 dataWithImplication = DataWithImplication.read(data_file,implications_file)
 cboi = CbOI(dataWithImplication)
 cboi.start(verbose=False)
+
+#cbo = CbO(dataWithImplication.data)
+#cbo.start(verbose=False)
     
 
 class Main:

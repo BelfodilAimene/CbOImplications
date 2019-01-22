@@ -10,24 +10,20 @@ class CbOI(Enumerator) :
         super(CbOI, self).__init__(dataWithImplications.data)
         self.implications = dataWithImplications
         
-        
     def _start(self, *args,**kwargs):
         # TODO: reorder the data such that alphabet total order is a linearization of the dag order
         
         self.nb_closure_computation = 1 #Computing the closure of the emptyset
-        for result in self.dfs(CbOIItemset.bottom_itemset(self)):
-            yield result
-        
-        
-    def dfs(self, itemset, prohibitted=set()):
-        yield itemset.leaves, itemset.extent
-        for addable in itemset.addables - prohibitted :
-            next_closed = itemset.add_and_close(addable, prohibitted)
-            self.nb_closure_computation+=1
-            if next_closed != None:
-                for result in self.dfs(next_closed, set(prohibitted)):
-                    yield result
-            prohibitted.add(addable)
+        stack = [(CbOIItemset.bottom_itemset(self), set())]
+        while stack:
+            itemset, forbidden = stack.pop()
+            for addable in itemset.addables - forbidden :
+                next_closed = itemset.add_and_close(addable, forbidden)
+                self.nb_closure_computation+=1
+                if next_closed != None:
+                    stack.append((next_closed, set(forbidden)))
+                forbidden.add(addable)
+            yield itemset.leaves, itemset.extent
 
     def __str__(self):
         return "Close-By-One-Implications"

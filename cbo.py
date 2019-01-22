@@ -3,21 +3,17 @@ from enumerator import Enumerator
 class CbO(Enumerator) :
     def _start(self, *args,**kwargs):
         self.nb_closure_computation = 1 #Computing the closure of the emptyset
-        for result in self.dfs(CbOItemset.bottom_itemset(self), 0):
-            yield result
-        
-        
-    def dfs(self, itemset, pos):
-        for item in range(pos, self.data.m) :
-            if item in itemset.itemset : continue
-            next_closed = itemset.add_and_close(item)
-            self.nb_closure_computation+=1
+        stack = [(CbOItemset.bottom_itemset(self), 0)]
+        while stack :
+            itemset, pos = stack.pop()
+            for item in range(pos, self.data.m) :
+                if item in itemset.itemset : continue
+                next_closed = itemset.add_and_close(item)
+                self.nb_closure_computation+=1
+                if next_closed != None:
+                    stack.append((next_closed, item))
+            yield itemset.itemset, itemset.extent
             
-            if next_closed != None:
-                for result in self.dfs(next_closed, item):
-                    yield result
-        yield itemset.itemset, itemset.extent
-
     def __str__(self):
         return "Close-By-One"
         
