@@ -78,9 +78,9 @@ class CbOIItemset:
                 if parent_degrees == 1:
                     self.addables.add(child)
                 else:
-                    self.future_addables[child] = parent_degrees
+                    self.future_addables[child] = parent_degrees - 1
             elif ancient_value == 1:
-                self.addables.add(item)
+                self.addables.add(child)
                 del self.future_addables[child]
             else:
                 self.future_addables[child] = ancient_value - 1
