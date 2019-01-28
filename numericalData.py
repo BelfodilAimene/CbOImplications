@@ -57,7 +57,7 @@ class NumericalData :
             for i in range(attr_to_items_indices[column][1],next_column_first_indice-1):
                 childs.append(frozenset([i+1]))
             childs.append(frozenset())
-        parents = DataWithImplication.get_parents_from_childs_or_childs_from_parents(childs)
+        parents = DataWithImplication.reverse(childs)
 
         return DataWithImplication(data, childs, parents)
         

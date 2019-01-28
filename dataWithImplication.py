@@ -133,8 +133,8 @@ class DataWithImplication:
         random.shuffle(new_list_of_objects)
         random.shuffle(new_list_of_attributes)
         
-        new_list_of_objects = new_list_of_objects[:new_n]
-        new_list_of_attributes = new_list_of_attributes[:new_m]
+        new_list_of_objects = sorted(new_list_of_objects[:new_n])
+        new_list_of_attributes = sorted(new_list_of_attributes[:new_m])
         
         return self.subdataset(new_list_of_objects,new_list_of_attributes)
 
@@ -145,7 +145,7 @@ class DataWithImplication:
         
         random.shuffle(new_list_of_implications_indices)
         
-        new_list_of_implications_indices = new_list_of_implications_indices[:new_nb_implications]
+        new_list_of_implications_indices = sorted(new_list_of_implications_indices[:new_nb_implications])
         
         return self.subimplications(new_list_of_implications_indices)
 

@@ -28,7 +28,6 @@ class HMTData :
                 for element in hmt_items:
                     new_itemset.add(symbol_to_indice[element])
             horizontal.append(frozenset(new_itemset))
-        
         data = Data.from_horizontal(alphabet, horizontal)
         parents = []
         for element in alphabet:
@@ -37,7 +36,7 @@ class HMTData :
             else :
                 parents.append(frozenset([symbol_to_indice[".".join(element.split(".")[:-1])]]))
 
-        childs = DataWithImplication.get_parents_from_childs_or_childs_from_parents(parents)
+        childs = DataWithImplication.reverse(parents)
 
         return DataWithImplication(data, childs, parents)
 
