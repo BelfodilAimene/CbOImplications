@@ -46,6 +46,8 @@ class Data :
         new_list_of_attributes = new_list_of_attributes[:new_m]
         return self.subcontext(new_list_of_objects, new_list_of_attributes)
         
+    def copy(self):
+        return Data(list(self.alphabet), list(self.horizontal),list(self.vertical))
 
     @staticmethod
     def from_horizontal(alphabet, horizontal):

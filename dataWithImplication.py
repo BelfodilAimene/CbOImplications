@@ -14,62 +14,17 @@ class DataWithImplication:
 
         self.nb_implications = sum(map(len, self.parents))
 
-    def strict_implication_poset_size(self):
-        size_poset = 0
-        for i in range(self.data.m):
-            size_poset+=len(self.get_filter(i))
-        return size_poset-self.data.m
+    def strict_implication_relation_size(self):
+        return sum(map(lambda i : len(self.get_filter(i)), range(self.data.m)))-self.data.m
 
-    def strict_total_implication_poset_size(self):
-        size_poset = 0
-        for i in range(self.data.m):
-            size_poset+=len(DataWithImplication.get_real_filter(self.data,i))
-        return size_poset-self.data.m
+    def strict_total_implication_relation_size(self):
+        return sum(map(lambda i: len(DataWithImplication.get_real_filter(self.data,i)), range(self.data.m)))-self.data.m  
 
     def knowledge_density(self):
-        return float(self.strict_implication_poset_size())/self.strict_total_implication_poset_size()
+        return float(self.strict_implication_relation_size())/self.strict_total_implication_relation_size()
                 
             
         
-
-    def sorted_alphabet_dataset_with_implications(self):
-        """
-        return a dataset which alphabet is sorted in such a way that the order
-        is a linearization of the partial order of implications set
-        """
-        # Finding a linearization -------------------------------------
-        # TODO: Optimize this computations 
-        new_order = []
-        
-        potential_addables = set()
-
-        addables = set(self.roots)
-        potential_addables = set()
-        
-        while addables:
-            element = min(addables)
-            new_order.append(element)
-            potential_addables|=set([child for child in self.childs[element] if child not in new_order])
-            addables.remove(element)
-            for i in set(potential_addables):
-                if all([parent in new_order for parent in self.parents[i]]):
-                    potential_addables.remove(i)
-                    addables.add(i)
-        # -------------------------------------------------------------
-
-        # Correcting the indices  -------------------------------------
-        old_to_new = list(new_order)
-        for old_indice, new_indice in enumerate(new_order):
-            old_to_new[old_indice] = new_indice
-            
-        new_alphabet = [self.data.alphabet[i] for i in new_order]
-        new_vertical = [self.data.vertical[i] for i in new_order]
-        new_data = Data.from_vertical(new_alphabet, new_vertical)
-        new_childs = map(lambda item_childs : map(lambda i: old_to_new[i], item_childs) ,self.childs)
-        new_childs = [frozenset(new_childs[i]) for i in new_order]
-        # -------------------------------------------------------------
-
-        return DataWithImplication(new_data,new_childs,DataWithImplication.reverse(new_childs))
 
     def subdataset(self, object_indices, attribute_indices):
         new_horizontal = []
@@ -162,11 +117,13 @@ class DataWithImplication:
     def from_data(data, implication_file_path = None, compute_implications = True, separator = "\t"):
         if implication_file_path == None:
             if compute_implications:
-                return DataWithImplication.compute_reversed_implications_and_data(data)
+                return DataWithImplication.compute_implications(data)
             else:
                 return DataWithImplication.no_implications(data)
         else :
-            return DataWithImplication.read_reversed_implications_and_data(data, implication_file_path, separator = separator)
+            return DataWithImplication.read_implications(data, implication_file_path, separator = separator)
+
+    
 
     @staticmethod    
     def compute_reversed_implications_and_data(data):
@@ -177,8 +134,21 @@ class DataWithImplication:
         return DataWithImplication(data,childs,parents)
 
     @staticmethod
-    def read_reversed_implications_and_data(data, implication_file_path, separator = "\t"):
-        implications = DataWithImplication.read_implications(data, implication_file_path, separator = separator)
+    def read_implications(data, implication_file_path, separator = "\t"):
+        parents = DataWithImplication.read_implications_file(data, implication_file_path, separator = separator)
+        childs = DataWithImplication.reverse(parents)
+        return DataWithImplication(data,childs,parents)
+
+    @staticmethod
+    def compute_implications(data):
+        parents = [DataWithImplication.get_real_filter(data, i)-frozenset([i]) for i in range(data.m)]
+        childs = DataWithImplication.reverse(parents)
+        return DataWithImplication(data,childs,parents)
+
+    def reduct(self):
+        implications = list(self.parents)
+        data = self.data
+        
         equivalent_items = tarjan({i:childs for i,childs in enumerate(implications)})
         equivalent_items = sorted(map(sorted,equivalent_items), key=lambda element: element[0])
         old_to_new_indice = [0 for i in range(data.m)]
@@ -203,7 +173,7 @@ class DataWithImplication:
         return DataWithImplication(semi_reduced_data, childs, parents)
 
     @staticmethod
-    def read_implications(data, from_file, separator = "\t"):
+    def read_implications_file(data, from_file, separator = "\t", check = False):
         """
         return one list of sets:
             for the set of position i the sets regroups implications which premises is item i
@@ -229,7 +199,7 @@ class DataWithImplication:
                     result[symbol_to_indice[implication[0]]].add(symbol_to_indice[implication[1]])
 
                 implications = map(frozenset,result)
-                if DataWithImplication.check_implications(data, implications):
+                if not check or DataWithImplication.check_implications(data, implications):
                     return implications
 
     @staticmethod
@@ -243,6 +213,47 @@ class DataWithImplication:
                                     " have item '"+data.alphabet[i]+
                                     "' but do not have '"+data.alphabet[j]+"'")
         return True
+
+    def sorted_alphabet_dataset_with_implications(self):
+        """
+        return a dataset which alphabet is sorted in such a way that the order
+        is a linearization of the partial order of implications set
+        """
+        # Finding a linearization -------------------------------------
+        # TODO: Optimize this computations 
+        new_order = []
+        
+        potential_addables = set()
+
+        addables = set(self.roots)
+        potential_addables = set()
+        
+        while addables:
+            element = min(addables)
+            new_order.append(element)
+            potential_addables|=set([child for child in self.childs[element] if child not in new_order])
+            addables.remove(element)
+            for i in set(potential_addables):
+                if all([parent in new_order for parent in self.parents[i]]):
+                    potential_addables.remove(i)
+                    addables.add(i)
+        # -------------------------------------------------------------
+
+        # Correcting the indices  -------------------------------------
+        old_to_new = list(new_order)
+        for old_indice, new_indice in enumerate(new_order):
+            old_to_new[old_indice] = new_indice
+            
+        new_alphabet = [self.data.alphabet[i] for i in new_order]
+        new_vertical = [self.data.vertical[i] for i in new_order]
+        new_data = Data.from_vertical(new_alphabet, new_vertical)
+        new_childs = map(lambda item_childs : map(lambda i: old_to_new[i], item_childs) ,self.childs)
+        new_childs = [frozenset(new_childs[i]) for i in new_order]
+        # -------------------------------------------------------------
+
+        return DataWithImplication(new_data,new_childs,DataWithImplication.reverse(new_childs))
+
+    
 
     @staticmethod
     def _remove_indirect_implications(parents):
@@ -270,6 +281,15 @@ class DataWithImplication:
         """
         data = Data.read(data_file_path, separator = separator)
         return DataWithImplication.from_data(data, implication_file_path, compute_implications, separator = separator)
+
+    @staticmethod
+    def read_and_reduct(data_file_path, implication_file_path = None, compute_implications = True, separator = "\t"):
+        """
+        @param data_file_path : itemset file path
+        @param implication_file_path: implications file path
+        @param compute_implications: if implication_file_path is None wether or note compute the set of implication using the dataset
+        """
+        return DataWithImplication.read(data_file_path, implication_file_path, compute_implications, separator).reduct()
 
     def write(self, data_file_path, implication_file_path, separator = "\t"):
         self.data.write(data_file_path, separator = separator)

@@ -1,4 +1,4 @@
-dataset_file_path,implication_file_path,nb_objects,nb_attributes,implications_density,data_load_time_ms,cbo_time_ms,cbo_closed_items,cbo_nb_closure_computations,data_and_implications_load_time_ms,cboi_time_ms,cboi_closed_items,cboi_nb_closure_computations
-data/hmt/deputies/input.data,,4757,358,0.0,89,670,1308,185776,91,1994,1308,185762
-data/hmt/deputies/input.data,data/hmt/deputies/input.implications,4757,358,0.6856866537717602,90,665,1308,185776,174,118,1308,16611
-data/hmt/deputies/input.data,__COMPUTE__,4757,348,1.0,92,685,1308,185776,181,144,1308,13287
+dataset_file_path,implication_file_path,nb_objects,nb_attributes,given_implication_size,context_implication_size,implications_density,data_load_time_ms,cbo_time_ms,cbo_closed_items,cbo_nb_closure_computations,data_and_implications_load_time_ms,cboi_time_ms,cboi_closed_items,cboi_nb_closure_computations
+data/hmt/deputies/input.data,,4757,358,0,1034,0.0,90,664,1308,185776,172,2021,1308,185762
+data/hmt/deputies/input.data,data/hmt/deputies/input.implications,4757,358,709,1034,0.6856866537717602,90,673,1308,185776,178,116,1308,16611
+data/hmt/deputies/input.data,__COMPUTE__,4757,358,1034,1034,1.0,89,669,1308,185776,184,143,1301,13175

@@ -22,49 +22,6 @@ from matplotlib import colors,markers
 
 from utils import current_time_in_millis
 
-"""
-NumericalData.read("data/numerical/iris.csv").interoridnal_scaling().write("data/numerical/iris-itemsets.data","data/numerical/iris-itemsets.implications")
-dataWithImplication = DataWithImplication.read("data/numerical/iris-itemsets.data","data/numerical/iris-itemsets.implications")
-cboi = CbOI(dataWithImplication)
-cboi.start(verbose=False)
-"""
-
-
-"""
-HMTData.read("data/hmt/input.hmt.data").ordinal_scaling().write("data/hmt/input.data","data/hmt/input.implications")
-dataWithImplication = DataWithImplication.read("data/hmt/input.data","data/hmt/input.implications")
-cboi = CbOI(dataWithImplication)
-cboi.start(verbose=False)
-"""
-
-"""
-data_file = "data/hmt/deputies/input.data"
-implications_file = "data/hmt/deputies/input.implications"
-dataWithImplication = DataWithImplication.read(data_file,implications_file)
-cboi = CbOI(dataWithImplication)
-cboi.start(verbose=False)
-"""
-
-#cbo = CbO(dataWithImplication.data)
-#cbo.start(verbose=False)
-    
-
-#class Test:
-#    @staticmethod
-
-
-#data = DataWithImplication.read("data/numerical/BL/input.data","data/numerical/BL/input.implications")
-#data = DataWithImplication.read("data/itemsets/test/test2/input.data","data/itemsets/test/test2/input.implications")
-#data = DataWithImplication.read("data/numerical/test/input.data","data/numerical/test/input.implications")
-#print data.knowledge_density()
-#data_computed = DataWithImplication.read("data/hmt/deputies/input.data","data/hmt/deputies/input.implications", False)
-#data_computed = DataWithImplication.read("data/hmt/deputies/input.data",None, True)
-#print data_computed.knowledge_density()
-
-#cboi = CbOI(data_computed)
-#cboi.start(verbose=False) 
-#print data_computed.knowledge_density()
-
 class Main:
     @staticmethod
     def main():
@@ -127,7 +84,7 @@ class Main:
 
     @staticmethod
     def cboi(args):
-        dataWithImplication = DataWithImplication.read(args.data, args.implications, args.compute_implications)
+        dataWithImplication = DataWithImplication.read_and_reduct(args.data, args.implications, args.compute_implications)
         cboi = CbOI(dataWithImplication)
         cboi.start(verbose = args.verbose)
 
@@ -155,7 +112,7 @@ class Main:
 
     @staticmethod
     def subdataset(args):
-        dataWithImplication = DataWithImplication.read(args.data, args.implications, args.compute_implications)
+        dataWithImplication = DataWithImplication.read_and_reduct(args.data, args.implications, args.compute_implications)
         dataWithImplication = dataWithImplication.random_subdataset_and_subimplications(args.percentage_objects,args.percentage_attributes,args.percentage_implications)
         suffix="-{0:.2f}-{1:.2f}-{2:.2f}".format(args.percentage_objects,args.percentage_attributes,args.percentage_implications)
         dataWithImplication.write(Main._compute_output_path_from_file_path(args.data, "data", suffix),Main._compute_output_path_from_file_path(args.data, "implications", suffix))
@@ -163,7 +120,7 @@ class Main:
 
     @staticmethod
     def _test_with_different_knowledge_density(data_file_path, nb_cut = 10):
-        data_with_implications = DataWithImplication.from_data(Data.read(data_file_path), None, True)
+        data_with_implications = DataWithImplication.read(data_file_path, None, True)
         percentages = [float(i)/nb_cut for i in range(0, nb_cut+1)]
         list_of_data = map(data_with_implications.random_subimplications, percentages)
         
@@ -224,7 +181,8 @@ class Main:
     def _test(test_file_path):
         KEY_WORD = "__COMPUTE__"
         data = pd.read_csv(test_file_path)
-        column_list = ["dataset_file_path","implication_file_path","nb_objects","nb_attributes","implications_density",
+        column_list = ["dataset_file_path","implication_file_path","nb_objects","nb_attributes",
+                       "given_implication_size","context_implication_size","implications_density",
                        "data_load_time_ms","cbo_time_ms","cbo_closed_items","cbo_nb_closure_computations",
                        "data_and_implications_load_time_ms","cboi_time_ms","cboi_closed_items","cboi_nb_closure_computations"]
         result = {k:[] for k in column_list}
@@ -250,25 +208,39 @@ class Main:
 
             instant =  current_time_in_millis()
             data = Data.read(data_file_path)
+            nb_objects = data.n
+            nb_attributes = data.m
+            result["nb_objects"].append(nb_objects)
+            result["nb_attributes"].append(nb_attributes)
             data_load_time_ms =  current_time_in_millis()-instant
             result["data_load_time_ms"].append(data_load_time_ms)
-            print "  data load Time:                  ",data_load_time_ms,"ms"
+            print "  Data Load Time:                  ",data_load_time_ms,"ms"
+            print "  Number of objects:               ",nb_objects
+            print "  Number of attributes:            ",nb_attributes
+            
+            
+            
 
             instant =  current_time_in_millis()
             dataWithImplication = DataWithImplication.read(data_file_path, implication_file_path, compute)
-            data_and_implications_load_time_ms =  current_time_in_millis()-instant
-            result["data_and_implications_load_time_ms"].append(data_and_implications_load_time_ms)
-            print "  data and implications load Time: ",data_and_implications_load_time_ms,"ms"
             
-            nb_objects = dataWithImplication.data.n
-            nb_attributes = dataWithImplication.data.m
-            knowledge_density = dataWithImplication.knowledge_density()
-            result["nb_objects"].append(nb_objects)
-            result["nb_attributes"].append(nb_attributes)
-            result["implications_density"].append(knowledge_density)
-            print "  Number of objects:               ",nb_objects
-            print "  Number of attributes:            ",nb_attributes
-            print "  implications density:            ",knowledge_density
+            instant2 =  current_time_in_millis()
+            given_implication_size = dataWithImplication.strict_implication_relation_size()
+            context_implication_size = dataWithImplication.strict_total_implication_relation_size()
+            implications_density = float(given_implication_size)/context_implication_size
+            instant3 = current_time_in_millis()
+            dataWithImplication = dataWithImplication.reduct()
+            data_and_implications_load_time_ms =  (current_time_in_millis()-instant3)+(instant2 - instant)
+            result["data_and_implications_load_time_ms"].append(data_and_implications_load_time_ms)
+            print "  Data and Implications Load Time: ",data_and_implications_load_time_ms,"ms"
+            
+
+            result["given_implication_size"].append(given_implication_size)
+            result["context_implication_size"].append(context_implication_size)
+            result["implications_density"].append(implications_density)
+            print "  Given Implication Size:          ",given_implication_size
+            print "  Context Implication Size:        ",context_implication_size
+            print "  Implications density:            ",implications_density
             
 
             print "  Running CbOI (use Implications) ..."
@@ -292,6 +264,7 @@ class Main:
             print "    Elapsed time:                  ",elapsed_time,"ms"
             print "    Number of closed patterns:     ",nb_closed
             print "    Number of closure computations:",nb_closure
+            print "\n\n"+"-"*40+"\n"+"-"*40+"\n\n"
         pd.DataFrame.from_dict(result).to_csv(Main._compute_output_path_from_file_path(test_file_path,"output"), index=False, columns=column_list)
 
     @staticmethod
