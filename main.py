@@ -20,6 +20,8 @@ import matplotlib.pyplot as plt
 import matplotlib.ticker as ticker
 from matplotlib import colors,markers
 
+from utils import current_time_in_millis
+
 """
 NumericalData.read("data/numerical/iris.csv").interoridnal_scaling().write("data/numerical/iris-itemsets.data","data/numerical/iris-itemsets.implications")
 dataWithImplication = DataWithImplication.read("data/numerical/iris-itemsets.data","data/numerical/iris-itemsets.implications")
@@ -220,10 +222,11 @@ class Main:
     
     @staticmethod
     def _test(test_file_path):
+        KEY_WORD = "__COMPUTE__"
         data = pd.read_csv(test_file_path)
         column_list = ["dataset_file_path","implication_file_path","nb_objects","nb_attributes","implications_density",
-                       "cbo_time_ms","cbo_closed_items","cbo_nb_closure_computations",
-                       "cboi_time_ms","cboi_closed_items","cboi_nb_closure_computations"]
+                       "data_load_time_ms","cbo_time_ms","cbo_closed_items","cbo_nb_closure_computations",
+                       "data_and_implications_load_time_ms","cboi_time_ms","cboi_closed_items","cboi_nb_closure_computations"]
         result = {k:[] for k in column_list}
         
         for i,line in data.iterrows():
@@ -231,19 +234,42 @@ class Main:
             data_file_path, implication_file_path = line[0], line[1]
             result["dataset_file_path"].append(data_file_path)
             result["implication_file_path"].append(implication_file_path)
+
+            implication_file_path = str(implication_file_path)
+            if implication_file_path == "nan" : implication_file_path = ""
+
             print "  Data file:           ",data_file_path
             print "  Implication file:    ",implication_file_path
 
-            dataWithImplication = DataWithImplication.read(data_file_path, implication_file_path)
+            compute = False
+            if not implication_file_path :
+                implication_file_path = None
+            elif implication_file_path == "__COMPUTE__" :
+                implication_file_path = None
+                compute = True
+
+            instant =  current_time_in_millis()
+            data = Data.read(data_file_path)
+            data_load_time_ms =  current_time_in_millis()-instant
+            result["data_load_time_ms"].append(data_load_time_ms)
+            print "  data load Time:                  ",data_load_time_ms,"ms"
+
+            instant =  current_time_in_millis()
+            dataWithImplication = DataWithImplication.read(data_file_path, implication_file_path, compute)
+            data_and_implications_load_time_ms =  current_time_in_millis()-instant
+            result["data_and_implications_load_time_ms"].append(data_and_implications_load_time_ms)
+            print "  data and implications load Time: ",data_and_implications_load_time_ms,"ms"
+            
             nb_objects = dataWithImplication.data.n
             nb_attributes = dataWithImplication.data.m
             knowledge_density = dataWithImplication.knowledge_density()
             result["nb_objects"].append(nb_objects)
             result["nb_attributes"].append(nb_attributes)
             result["implications_density"].append(knowledge_density)
-            print "  Number of objects:   ",nb_objects
-            print "  Number of attributes:",nb_attributes
-            print "  implications density:",knowledge_density  
+            print "  Number of objects:               ",nb_objects
+            print "  Number of attributes:            ",nb_attributes
+            print "  implications density:            ",knowledge_density
+            
 
             print "  Running CbOI (use Implications) ..."
             cboi = CbOI(dataWithImplication)
@@ -254,9 +280,10 @@ class Main:
             print "    Elapsed time:                  ",elapsed_time,"ms"
             print "    Number of closed patterns:     ",nb_closed
             print "    Number of closure computations:",nb_closure
+ 
             
             
-            cbo = CbO(dataWithImplication.data)
+            cbo = CbO(Data.read(data_file_path))
             elapsed_time, nb_closed, nb_closure = cbo.start(verbose = False, print_outputs=False)
             result["cbo_time_ms"].append(elapsed_time)
             result["cbo_closed_items"].append(nb_closed)
