@@ -1,3 +1,4 @@
+import random, math
 class Data :
     def __init__(self, alphabet, horizontal, vertical):
         self.alphabet = alphabet
@@ -9,6 +10,42 @@ class Data :
 
         # TODO : compute implications (or read implications)
         # TODO : enumeration class and how to print only useful knowledge
+
+    def subcontext(self, object_indices, attribute_indices):
+        new_horizontal = []
+        new_alphabet = []
+        indice_to_new_indice= {}
+        for i in object_indices:
+            itemset = self.horizontal[i]
+            new_itemset = set()
+            for item in itemset:
+                if item not in attribute_indices: continue
+                if item not in indice_to_new_indice:
+                    indice_to_new_indice[item] = len(new_alphabet)
+                    new_alphabet.append(self.alphabet[item])
+                new_itemset.add(indice_to_new_indice[item])
+            if new_itemset:
+                new_horizontal.append(frozenset(new_itemset))
+        if new_horizontal:
+            return Data.from_horizontal(new_alphabet, new_horizontal)
+        else:
+            return Data([], [], [])
+
+    def random_subcontext(self, percentage_objects, percentage_attributes):
+        """
+        Return a random subcontext of at most percentage objects, percentage attributes of the base context
+         (The at most comes from the fact that empty attributes and empty objects are removed from the context)
+        """
+        new_n = int(math.ceil(percentage_objects*self.n))
+        new_m = int(math.ceil(percentage_attributes*self.m))
+        new_list_of_objects = range(self.n)
+        new_list_of_attributes = range(self.m)
+        random.shuffle(new_list_of_objects)
+        random.shuffle(new_list_of_attributes)
+        new_list_of_objects = new_list_of_objects[:new_n]
+        new_list_of_attributes = new_list_of_attributes[:new_m]
+        return self.subcontext(new_list_of_objects, new_list_of_attributes)
+        
 
     @staticmethod
     def from_horizontal(alphabet, horizontal):

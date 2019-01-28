@@ -1,5 +1,6 @@
 from tarjan import tarjan
 from data import Data
+import math, random
 
 class DataWithImplication:
     def __init__(self, data, childs, parents):
@@ -10,6 +11,8 @@ class DataWithImplication:
         self.childs = childs
         self.parents = parents
         self.roots = frozenset([i for i,parent in enumerate(self.parents) if len(parent)==0])
+
+        self.nb_implications = sum(map(len, self.parents))
 
     def sorted_alphabet_dataset_with_implications(self):
         """
@@ -50,14 +53,92 @@ class DataWithImplication:
 
         return DataWithImplication(new_data,new_childs,DataWithImplication.get_parents_from_childs_or_childs_from_parents(new_childs))
 
+    def subdataset(self, object_indices, attribute_indices):
+        new_horizontal = []
+        new_alphabet = []
+        old_indice_to_new_indice= {}
         
-                
-                
-            
-            
+        
+        for i in object_indices:
+            itemset = self.data.horizontal[i]
+            new_itemset = set()
+            for item in itemset:
+                if item not in attribute_indices: continue
+                if item not in old_indice_to_new_indice:
+                    old_indice_to_new_indice[item] = len(new_alphabet)
+                    new_alphabet.append(self.data.alphabet[item])
+                new_itemset.add(old_indice_to_new_indice[item])
+            if new_itemset:
+                new_horizontal.append(frozenset(new_itemset))
+        if not new_horizontal:
+            return DataWithImplications.no_implications(Data([], [], []))
+
+        new_data = Data.from_horizontal(new_alphabet, new_horizontal)
+
+        new_indice_to_old_indice = [None for i in range(len(new_alphabet))]
+        for k,v in old_indice_to_new_indice.iteritems():
+            new_indice_to_old_indice[v] = k
+
+        new_parents = []
+        for old_indice in new_indice_to_old_indice:
+            new_parent = set()
+            for old_parent in self.parents[old_indice]:
+                if old_parent in old_indice_to_new_indice:
+                    new_parent.add(old_indice_to_new_indice[old_parent])
+            new_parents.append(frozenset(new_parent))
+
+        new_childs = DataWithImplication.get_parents_from_childs_or_childs_from_parents(new_parents)
+          
+        
+        return DataWithImplication(new_data, new_childs, new_parents)
+
+    def subimplications(self, implications_to_keep):
+        new_parents = [set() for _ in range(self.data.m)]
+        i = 0
+        for indice, parent in enumerate(self.parents):
+            for p in parent:
+                if i in implications_to_keep:
+                    new_parents[indice].add(p)
+                i+=1
+        new_data = Data(list(self.data.alphabet), list(self.data.horizontal), list(self.data.vertical))
+        new_parents = map(frozenset, new_parents)
+        new_childs = DataWithImplication.get_parents_from_childs_or_childs_from_parents(new_parents)
+        return DataWithImplication(new_data, new_childs, new_parents)
+
+    def random_subdataset(self, percentage_objects, percentage_attributes):
+        new_n = int(math.ceil(percentage_objects*self.data.n))
+        new_m = int(math.ceil(percentage_attributes*self.data.m))
+        
+        new_list_of_objects = range(self.data.n)
+        new_list_of_attributes = range(self.data.m)
+        
+        random.shuffle(new_list_of_objects)
+        random.shuffle(new_list_of_attributes)
+        
+        new_list_of_objects = new_list_of_objects[:new_n]
+        new_list_of_attributes = new_list_of_attributes[:new_m]
+        
+        return self.subdataset(new_list_of_objects,new_list_of_attributes)
+
+    def random_subimplications(self, percentage_implications):
+        new_nb_implications = int(math.ceil(percentage_implications*self.nb_implications))
+        
+        new_list_of_implications_indices = range(self.nb_implications)
+        
+        random.shuffle(new_list_of_implications_indices)
+        
+        new_list_of_implications_indices = new_list_of_implications_indices[:new_nb_implications]
+        
+        return self.subimplications(new_list_of_implications_indices)
+
+    def random_subdataset_and_subimplications(self, percentage_objects, percentage_attributes, percentage_implications):
+        return self.random_subdataset(percentage_objects, percentage_attributes).random_subimplications(percentage_implications)
+        
+
             
         
-            
+        
+        
 
     @staticmethod
     def from_data(data, implication_file_path = None, compute_implications = True, separator = "\t"):
@@ -169,8 +250,8 @@ class DataWithImplication:
 
     @staticmethod
     def no_implications(data):
-        childs = [set() for i in range(data.m)]
-        parents = [set() for i in range(data.m)]
+        childs = [frozenset() for i in range(data.m)]
+        parents = [frozenset() for i in range(data.m)]
         return DataWithImplication(data,childs,parents)
 
     @staticmethod
