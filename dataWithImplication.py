@@ -14,6 +14,24 @@ class DataWithImplication:
 
         self.nb_implications = sum(map(len, self.parents))
 
+    def strict_implication_poset_size(self):
+        size_poset = 0
+        for i in range(self.data.m):
+            size_poset+=len(self.get_filter(i))
+        return size_poset-self.data.m
+
+    def strict_total_implication_poset_size(self):
+        size_poset = 0
+        for i in range(self.data.m):
+            size_poset+=len(DataWithImplication.get_real_filter(self.data,i))
+        return size_poset-self.data.m
+
+    def knowledge_density(self):
+        return float(self.strict_implication_poset_size())/self.strict_total_implication_poset_size()
+                
+            
+        
+
     def sorted_alphabet_dataset_with_implications(self):
         """
         return a dataset which alphabet is sorted in such a way that the order
@@ -51,7 +69,7 @@ class DataWithImplication:
         new_childs = [frozenset(new_childs[i]) for i in new_order]
         # -------------------------------------------------------------
 
-        return DataWithImplication(new_data,new_childs,DataWithImplication.get_parents_from_childs_or_childs_from_parents(new_childs))
+        return DataWithImplication(new_data,new_childs,DataWithImplication.reverse(new_childs))
 
     def subdataset(self, object_indices, attribute_indices):
         new_horizontal = []
@@ -87,7 +105,7 @@ class DataWithImplication:
                     new_parent.add(old_indice_to_new_indice[old_parent])
             new_parents.append(frozenset(new_parent))
 
-        new_childs = DataWithImplication.get_parents_from_childs_or_childs_from_parents(new_parents)
+        new_childs = DataWithImplication.reverse(new_parents)
           
         
         return DataWithImplication(new_data, new_childs, new_parents)
@@ -102,7 +120,7 @@ class DataWithImplication:
                 i+=1
         new_data = Data(list(self.data.alphabet), list(self.data.horizontal), list(self.data.vertical))
         new_parents = map(frozenset, new_parents)
-        new_childs = DataWithImplication.get_parents_from_childs_or_childs_from_parents(new_parents)
+        new_childs = DataWithImplication.reverse(new_parents)
         return DataWithImplication(new_data, new_childs, new_parents)
 
     def random_subdataset(self, percentage_objects, percentage_attributes):
@@ -153,7 +171,9 @@ class DataWithImplication:
     @staticmethod    
     def compute_reversed_implications_and_data(data):
         data = data.get_column_clarified_dataset()
-        childs, parents = data.get_reversed_implications()
+        parents = [DataWithImplication.get_real_filter(data, i)-frozenset([i]) for i in range(data.m)]
+        parents = DataWithImplication._remove_indirect_implications(parents)
+        childs = DataWithImplication.reverse(parents)
         return DataWithImplication(data,childs,parents)
 
     @staticmethod
@@ -177,13 +197,8 @@ class DataWithImplication:
 
         semi_reduced_data = data.fusion_equivalent_itemsets(equivalent_items)
 
-        
-        parents = new_implications
-        childs = DataWithImplication.get_parents_from_childs_or_childs_from_parents(parents)
-        
-
-        childs, parents = DataWithImplication._remove_indirect_implications(childs, parents)
-
+        parents = DataWithImplication._remove_indirect_implications(new_implications)
+        childs = DataWithImplication.reverse(parents)
         
         return DataWithImplication(semi_reduced_data, childs, parents)
 
@@ -228,25 +243,17 @@ class DataWithImplication:
                                     " have item '"+data.alphabet[i]+
                                     "' but do not have '"+data.alphabet[j]+"'")
         return True
-        
 
     @staticmethod
-    def _remove_indirect_implications(childs, parents):
-        childs = map(set, childs)
-        leaves = [i for i,elements in enumerate(childs) if len(elements)==0]
-        for leaf in leaves:
-            DataWithImplication._rec_remove_indirect_implications(leaf, set(), childs, parents)
-            
-        childs = map(frozenset, childs)
-        parents = DataWithImplication.get_parents_from_childs_or_childs_from_parents(childs)
-        return childs, parents
-        
-    @staticmethod
-    def _rec_remove_indirect_implications(item, current_all_childs, childs, parents):
-        current_all_childs = current_all_childs | childs[item]
-        for parent in parents[item]:
-            childs[parent] -= current_all_childs
-            DataWithImplication._rec_remove_indirect_implications(parent, current_all_childs, childs, parents)
+    def _remove_indirect_implications(parents):
+        all_strict_filters = [DataWithImplication._get_filter(parents,i)-set([i]) for i in range(len(parents))]
+        new_parents = []
+        for i,i_parents in enumerate(parents):
+            new_i_parents = set(i_parents)-set([i])
+            for j in i_parents:
+                new_i_parents-=all_strict_filters[j]
+            new_parents.append(new_i_parents)
+        return parents
 
     @staticmethod
     def no_implications(data):
@@ -273,7 +280,7 @@ class DataWithImplication:
                     the_file.write(self.data.alphabet[i]+separator+self.data.alphabet[parent]+'\n')
 
     @staticmethod
-    def get_parents_from_childs_or_childs_from_parents(pointers):
+    def reverse(pointers):
         return [frozenset([j for j,pointer in enumerate(pointers) if i in pointer]) for i in range(len(pointers))]
 
     def __str__(self):
@@ -283,4 +290,34 @@ class DataWithImplication:
             for parent in implied:
                 result+=self.data.alphabet[i]+" "+self.data.alphabet[parent]+'\n'
         return result
+
+    def get_filter(self, item):
+        return DataWithImplication._get_filter(self.parents, item)
+
+    @staticmethod
+    def _get_filter(parents, item):
+        current_filter = set([item])
+        current_addables = set(parents[item])
+        while current_addables:
+            addable = current_addables.pop()
+            if addable not in current_filter:
+                current_filter.add(addable)
+                current_addables|=set(parents[addable])
+        return current_filter
+
+    @staticmethod
+    def get_real_filter(data, item):
+        current_filter = set()
+        vertical_item = data.vertical[item]
+        for i, vertical_i  in enumerate(data.vertical):
+            if vertical_item <= vertical_i:
+                current_filter.add(i) 
+            
+        return current_filter
+                
+                
+        
+
+        
+        
     

@@ -46,12 +46,17 @@ cboi.start(verbose=False)
 #class Test:
 #    @staticmethod
 
-"""
-data = DataWithImplication.read("data/itemsets/test/test1/input.data","data/itemsets/test/test1/input-full.implications")
-print data
-print "---"
-print data.random_subdataset_and_subimplications(0.8, 0.8, 0.3)
-"""
+
+#data = DataWithImplication.read("data/numerical/BL/input.data","data/numerical/BL/input.implications")
+#data = DataWithImplication.read("data/itemsets/test/test2/input.data","data/itemsets/test/test2/input.implications")
+#data = DataWithImplication.read("data/numerical/test/input.data","data/numerical/test/input.implications")
+#print data.knowledge_density()
+data_computed = DataWithImplication.read("data/numerical/BL/input.data","data/numerical/BL/input.implications", False)
+print data_computed.knowledge_density()
+
+cboi = CbOI(data_computed)
+cboi.start(verbose=False) 
+#print data_computed.knowledge_density()
 
 
 class Main:
@@ -136,7 +141,7 @@ class Main:
     @staticmethod
     def _test(test_file_path):
         data = pd.read_csv(test_file_path)
-        column_list = ["dataset_file_path","implication_file_path","nb_objects","nb_attributes",
+        column_list = ["dataset_file_path","implication_file_path","nb_objects","nb_attributes","implications_density",
                        "cbo_time_ms","cbo_closed_items","cbo_nb_closure_computations",
                        "cboi_time_ms","cboi_closed_items","cboi_nb_closure_computations"]
         result = {k:[] for k in column_list}
@@ -152,10 +157,13 @@ class Main:
             dataWithImplication = DataWithImplication.read(data_file_path, implication_file_path)
             nb_objects = dataWithImplication.data.n
             nb_attributes = dataWithImplication.data.m
+            knowledge_density = dataWithImplication.knowledge_density()
             result["nb_objects"].append(nb_objects)
             result["nb_attributes"].append(nb_attributes)
+            result["implications_density"].append(knowledge_density)
             print "  Number of objects:   ",nb_objects
             print "  Number of attributes:",nb_attributes
+            print "  implications density:",knowledge_density  
 
             print "  Running CbOI (use Implications) ..."
             cboi = CbOI(dataWithImplication)
