@@ -51,11 +51,12 @@ cboi.start(verbose=False)
 #data = DataWithImplication.read("data/itemsets/test/test2/input.data","data/itemsets/test/test2/input.implications")
 #data = DataWithImplication.read("data/numerical/test/input.data","data/numerical/test/input.implications")
 #print data.knowledge_density()
-data_computed = DataWithImplication.read("data/numerical/BL/input.data","data/numerical/BL/input.implications", False)
-print data_computed.knowledge_density()
+#data_computed = DataWithImplication.read("data/hmt/deputies/input.data","data/hmt/deputies/input.implications", False)
+#data_computed = DataWithImplication.read("data/hmt/deputies/input.data",None, True)
+#print data_computed.knowledge_density()
 
-cboi = CbOI(data_computed)
-cboi.start(verbose=False) 
+#cboi = CbOI(data_computed)
+#cboi.start(verbose=False) 
 #print data_computed.knowledge_density()
 
 

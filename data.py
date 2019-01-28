@@ -98,58 +98,6 @@ class Data :
             equivalent_items.append(equivalent_to_i)
         return equivalent_items
 
-    def get_reversed_implications(self):
-        """
-        Return a tuple containing three elements:
-           - Roots   : items that does not imply anything
-           - childs  : A list containing for each i the set of j -> i (and there is no k s.t. j -> k -> i)
-           - parents : A list containing for each i the set of i -> j (and there is no k s.t. i -> k -> j)
-        """
-        # Does work only in column-clarified datasets where there is no cycle 
-        # first implementation O(n^2)
-        if self.m == 0 : return [] 
-        
-        childs  = {i : [] for i in range(self.m)}
-        childs[-1] = []
-
-        parents = {i : [] for i in range(self.m)}
-        parents[-1] = []
-        
-        
-        root_extent = frozenset(range(self.m))
-        
-        for i in range(0,self.m):
-            current_parent = -1
-            current_parent_extent = root_extent
-            current_childs = childs[current_parent]
-
-            while len(current_childs)>0:
-                parent_changed = False
-                for child in childs[current_parent]:
-                    if self.vertical[child].issuperset(self.vertical[i]):
-                        current_parent = child
-                        current_parent_extent = self.vertical[child]
-                        parent_changed = True
-                        break
-                current_childs = childs[current_parent]
-                if not parent_changed : break
-
-            for child in list(current_childs) :
-                if self.vertical[i].issuperset(self.vertical[child]):
-                    parents[child].remove(current_parent)
-                    parents[child].append(i)
-                    
-                    childs[current_parent].remove(child)
-                    childs[i].append(child)
-                    
-            parents[i].append(current_parent)
-            childs[current_parent].append(i)
-
-        return (map(frozenset,[filter(lambda e : e != -1, childs[i]) for i in range(self.m)]),
-                map(frozenset,[filter(lambda e : e != -1, parents[i]) for i in range(self.m)]))
-        
-        
-
     @staticmethod
     def read(itemsets_file, separator = "\t"):
         with open(itemsets_file):
