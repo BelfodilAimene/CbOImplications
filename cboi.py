@@ -41,13 +41,11 @@ class CbOI(Enumerator) :
                 self.add_in(itemset, leaves, addables, future_addables, item)
         return extent,itemset, leaves, addables, future_addables
 
-    def add_in(self, itemset, leaves, addables, future_addables, item):
-	itemset.add(item)
+    def add_in(self, itemset, leaves, addables, future_addables, item, new_addables = set()):
+        itemset.add(item)
         addables.remove(item)
         leaves.add(item)
         leaves -= self.implications.parents[item]
-
-        new_addables_elements = set()
 
         for child in self.implications.childs[item]:
             ancient_value = future_addables.get(child, -1)
@@ -56,17 +54,15 @@ class CbOI(Enumerator) :
                 
                 if parent_degrees == 1:
                     addables.add(child)
-                    new_addables_elements.add(child)
+                    new_addables.add(child)
                 else:
                     future_addables[child] = parent_degrees - 1
             elif ancient_value == 1:
                 addables.add(child)
-                new_addables_elements.add(child)
+                new_addables.add(child)
                 del future_addables[child]
             else:
                 future_addables[child] = ancient_value - 1
-
-        return new_addables_elements
 
     def add_and_close_in(self, extent, itemset, leaves, addables, future_addables, item, forbidden):
         vertical = self.data.vertical
@@ -86,6 +82,6 @@ class CbOI(Enumerator) :
         while addables_to_test :
             i = addables_to_test.pop()
             if vertical[i] >= new_extent :
-                addables_to_test |= self.add_in(new_itemset, new_leaves, new_addables, new_future_addables,i)
+                self.add_in(new_itemset, new_leaves, new_addables, new_future_addables,i,addables_to_test)
 
         return new_extent, new_itemset, new_leaves, new_addables, new_future_addables
