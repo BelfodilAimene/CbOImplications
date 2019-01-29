@@ -124,7 +124,7 @@ class Main:
     def _test_with_different_knowledge_density(data_file_path, nb_cut = 10):
         data_with_implications = DataWithImplication.read_and_reduct(data_file_path, None, True)
         percentages = [float(i)/nb_cut for i in range(0, nb_cut+1)]
-        list_of_data = map(lambda p : data_with_implications.random_subimplications(p), percentages)
+        list_of_data = data_with_implications.random_subimplications_list(percentages)
         
         list_of_results = reversed(map(lambda data: CbOI(data).start(verbose = False, print_outputs=True),reversed(list_of_data)))
 
@@ -162,16 +162,21 @@ class Main:
         timeAx = barsAx.twinx()
         timeAx.set_ylabel("Execution time (ms)",fontsize=FONTSIZE)
         timeAx.tick_params(axis='y', labelsize=FONTSIZE)
-
-        barWidth = (x_axis[1]-x_axis[0])*0.75
+        
+        barWidth = 1
+        for i in range(len(x_axis)-1):
+            barWidth = min(barWidth, (x_axis[i+1]-x_axis[i])*0.75)
+            
         barsAx.set_yscale("log")
         barsAx.bar(x_axis, y_generated_closed_axis, width = barWidth, align='center', color= "gray", alpha = 0.8)
         barsAx.bar(x_axis, nb_closed_axis, width = barWidth, align='center', color= "gray", alpha = 0.8, hatch = "//")
         timeAx.errorbar(x_axis, y_time_axis, fmt = "o-", linewidth=LINEWIDTH,markersize=MARKERSIZE,color= "black")
         timeAx.set_yscale("log")
         labels = [item.get_text() for item in barsAx.get_xticklabels()]
-        
-        plt.xticks(x_axis[::2], map(lambda v : "{0:.2f}".format(v*100)+"%",x_axis[::2]))
+
+        frequency = 5
+        x_axis_ticks = [(float(i)/frequency) for i in range(frequency+1)]
+        plt.xticks(x_axis_ticks, map(lambda v : "{0:.2f}".format(v*100)+"%",x_axis_ticks))
         
         
         

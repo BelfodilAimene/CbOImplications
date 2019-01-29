@@ -25,7 +25,9 @@ class DataWithImplication:
                 
             
         
-
+    """
+    Subsampling
+    """
     def subdataset(self, object_indices, attribute_indices):
         new_horizontal = []
         new_alphabet = []
@@ -104,14 +106,20 @@ class DataWithImplication:
         
         return self.subimplications(new_list_of_implications_indices)
 
+    def random_subimplications_list(self, percentages_implications):
+        """
+        return list of data with subsampled implications
+        """
+        shuffeled_implications = range(self.nb_implications)
+        random.shuffle(shuffeled_implications)
+        return [self.subimplications(sorted(shuffeled_implications[:int(math.ceil(p*self.nb_implications))])) for p in sorted(percentages_implications)]
+
     def random_subdataset_and_subimplications(self, percentage_objects, percentage_attributes, percentage_implications):
         return self.random_subdataset(percentage_objects, percentage_attributes).random_subimplications(percentage_implications)
-        
+    """
+    -----------------------------------------------
+    """
 
-            
-        
-        
-        
 
     @staticmethod
     def from_data(data, implication_file_path = None, compute_implications = True, separator = "\t"):
