@@ -81,7 +81,7 @@ class Main:
         t = current_time_in_millis()
         data = Data.read(args.data)
         load_time = current_time_in_millis()-t
-        print dataWithImplication.info()
+        print data.info()
         print "Data Load time:",load_time,"ms"
         cbo = CbO(data)
         cbo.start(verbose = args.verbose)
@@ -118,6 +118,7 @@ class Main:
     def runtest(args):
         Main._test(args.input_data)
 
+    ## TODO: Add Graph of CbO Exectution time (ms)
     @staticmethod
     def runtest_with_different_implications(args):
         Main._test_with_different_knowledge_density(args.input_data, args.nb_cuts)
