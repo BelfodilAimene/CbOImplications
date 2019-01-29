@@ -85,11 +85,6 @@ class Main:
     @staticmethod
     def cboi(args):
         dataWithImplication = DataWithImplication.read_and_reduct(args.data, args.implications, args.compute_implications)
-        for i,e in enumerate(dataWithImplication.parents):
-            for j in e:
-                if i==j : print "aaaaaaaah"
-            
-        
         cboi = CbOI(dataWithImplication)
         cboi.start(verbose = args.verbose)
         
