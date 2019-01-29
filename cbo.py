@@ -10,7 +10,7 @@ class CbO(Enumerator) :
         stack = [(set(range(n)), set([item for item in range(m) if len(vertical[item]) == n]),  0)]
         while stack :
             extent, itemset, pos = stack.pop()
-            for item in xrange(pos, self.data.m) :
+            for item in xrange(pos, m) :
                 if item in itemset : continue
 
                 new_extent = extent & vertical[item]
