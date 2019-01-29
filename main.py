@@ -85,9 +85,16 @@ class Main:
     @staticmethod
     def cboi(args):
         dataWithImplication = DataWithImplication.read_and_reduct(args.data, args.implications, args.compute_implications)
+        for i,e in enumerate(dataWithImplication.parents):
+            for j in e:
+                if i==j : print "aaaaaaaah"
+            
+        
         cboi = CbOI(dataWithImplication)
         cboi.start(verbose = args.verbose)
+        
 
+        
     @staticmethod
     def interordinal(args):
         numerical_dataset = NumericalData.read(args.input_data).interoridnal_scaling()
@@ -120,9 +127,9 @@ class Main:
 
     @staticmethod
     def _test_with_different_knowledge_density(data_file_path, nb_cut = 10):
-        data_with_implications = DataWithImplication.read(data_file_path, None, True)
+        data_with_implications = DataWithImplication.read_and_reduct(data_file_path, None, True)
         percentages = [float(i)/nb_cut for i in range(0, nb_cut+1)]
-        list_of_data = map(data_with_implications.random_subimplications, percentages)
+        list_of_data = map(lambda p : data_with_implications.random_subimplications(p), percentages)
         
         list_of_results = reversed(map(lambda data: CbOI(data).start(verbose = False, print_outputs=True),reversed(list_of_data)))
 
@@ -132,7 +139,7 @@ class Main:
         y_generated_closed_axis = []
         
         for i,result in enumerate(list_of_results):
-            x_axis.append(percentages[i])
+            x_axis.append(list_of_data[i].knowledge_density())
             y_time_axis.append(result[0])
             nb_closed_axis.append(result[1])
             y_generated_closed_axis.append(result[2])

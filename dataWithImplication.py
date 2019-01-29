@@ -125,14 +125,6 @@ class DataWithImplication:
 
     
 
-    @staticmethod    
-    def compute_reversed_implications_and_data(data):
-        data = data.get_column_clarified_dataset()
-        parents = [DataWithImplication.get_real_filter(data, i)-frozenset([i]) for i in range(data.m)]
-        parents = DataWithImplication._remove_indirect_implications(parents)
-        childs = DataWithImplication.reverse(parents)
-        return DataWithImplication(data,childs,parents)
-
     @staticmethod
     def read_implications(data, implication_file_path, separator = "\t"):
         parents = DataWithImplication.read_implications_file(data, implication_file_path, separator = separator)
@@ -143,6 +135,7 @@ class DataWithImplication:
     def compute_implications(data):
         parents = [DataWithImplication.get_real_filter(data, i)-frozenset([i]) for i in range(data.m)]
         childs = DataWithImplication.reverse(parents)
+        
         return DataWithImplication(data,childs,parents)
 
     def reduct(self):
@@ -151,25 +144,22 @@ class DataWithImplication:
         
         equivalent_items = tarjan({i:childs for i,childs in enumerate(implications)})
         equivalent_items = sorted(map(sorted,equivalent_items), key=lambda element: element[0])
-        old_to_new_indice = [0 for i in range(data.m)]
+        old_to_new_indice = [None for i in range(data.m)]
         for new_indice, equivalents in  enumerate(equivalent_items):
             for old_indice in equivalents:
                 old_to_new_indice[old_indice] = new_indice
         new_implications = []
 
-        
         for element in equivalent_items :
             new_childs = set()
             for i in element :
                 new_childs |= set(map(lambda old : old_to_new_indice[old],implications[i]))
-            new_childs -= set(element)
-            new_implications.append(frozenset(new_childs))
+            new_implications.append(frozenset(new_childs)-frozenset([len(new_implications)]))
 
         semi_reduced_data = data.fusion_equivalent_itemsets(equivalent_items)
 
         parents = DataWithImplication._remove_indirect_implications(new_implications)
         childs = DataWithImplication.reverse(parents)
-        
         return DataWithImplication(semi_reduced_data, childs, parents)
 
     @staticmethod
