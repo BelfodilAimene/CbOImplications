@@ -21,6 +21,7 @@ import matplotlib.ticker as ticker
 from matplotlib import colors,markers
 
 from utils import current_time_in_millis
+import math
 
 class Main:
     @staticmethod
@@ -204,86 +205,95 @@ class Main:
                        "data_load_time_ms","cbo_time_ms","cbo_closed_items","cbo_nb_closure_computations",
                        "data_and_implications_load_time_ms","cboi_time_ms","cboi_closed_items","cboi_nb_closure_computations"]
         result = {k:[] for k in column_list}
-        
-        for i,line in data.iterrows():
-            print "Test",i,"..."
-            data_file_path, implication_file_path = line[0], line[1]
-            result["dataset_file_path"].append(data_file_path)
-            result["implication_file_path"].append(implication_file_path)
+        output_file_name = Main._compute_output_path_from_file_path(test_file_path,"output")
+        #"""
+        with open(output_file_name, 'w') as f:
+            pd.DataFrame.from_dict(result).to_csv(f, index=False, columns=column_list, header=True)
+            for i,line in data.iterrows():
+                print "Test",i,"..."
+                data_file_path, implication_file_path, call_cbo = line["data_file_path"], line["implication_file_path"], line["call_cbo"]
+                result["dataset_file_path"].append(data_file_path)
+                result["implication_file_path"].append(implication_file_path)
 
-            implication_file_path = str(implication_file_path)
-            if implication_file_path == "nan" : implication_file_path = ""
+                implication_file_path = str(implication_file_path)
+                if implication_file_path == "nan" : implication_file_path = ""
 
-            print "  Data file:           ",data_file_path
-            print "  Implication file:    ",implication_file_path
+                print "  Data file:           ",data_file_path
+                print "  Implication file:    ",implication_file_path
 
-            compute = False
-            if not implication_file_path :
-                implication_file_path = None
-            elif implication_file_path == KEY_WORD :
-                implication_file_path = None
-                compute = True
+                compute = False
+                if not implication_file_path :
+                    implication_file_path = None
+                elif implication_file_path == KEY_WORD :
+                    implication_file_path = None
+                    compute = True
 
-            instant =  current_time_in_millis()
-            data = Data.read(data_file_path)
-            nb_objects = data.n
-            nb_attributes = data.m
-            result["nb_objects"].append(nb_objects)
-            result["nb_attributes"].append(nb_attributes)
-            data_load_time_ms =  current_time_in_millis()-instant
-            result["data_load_time_ms"].append(data_load_time_ms)
-            print "  Data Load Time:                  ",data_load_time_ms,"ms"
-            print "  Number of objects:               ",nb_objects
-            print "  Number of attributes:            ",nb_attributes
-            
-            
-            
+                instant =  current_time_in_millis()
+                data = Data.read(data_file_path)
+                nb_objects = data.n
+                nb_attributes = data.m
+                result["nb_objects"].append(nb_objects)
+                result["nb_attributes"].append(nb_attributes)
+                data_load_time_ms =  current_time_in_millis()-instant
+                result["data_load_time_ms"].append(data_load_time_ms)
+                print "  Data Load Time:                  ",data_load_time_ms,"ms"
+                print "  Number of objects:               ",nb_objects
+                print "  Number of attributes:            ",nb_attributes
+                
+                
+                
 
-            instant =  current_time_in_millis()
-            dataWithImplication = DataWithImplication.read(data_file_path, implication_file_path, compute)
-            
-            instant2 =  current_time_in_millis()
-            given_implication_size = dataWithImplication.strict_implication_relation_size()
-            context_implication_size = dataWithImplication.strict_total_implication_relation_size()
-            implications_density = float(given_implication_size)/context_implication_size
-            instant3 = current_time_in_millis()
-            dataWithImplication = dataWithImplication.reduct()
-            data_and_implications_load_time_ms =  (current_time_in_millis()-instant3)+(instant2 - instant)
-            result["data_and_implications_load_time_ms"].append(data_and_implications_load_time_ms)
-            print "  Data and Implications Load Time: ",data_and_implications_load_time_ms,"ms"
-            
+                instant =  current_time_in_millis()
+                dataWithImplication = DataWithImplication.read(data_file_path, implication_file_path, compute)
+                
+                instant2 =  current_time_in_millis()
+                given_implication_size = dataWithImplication.strict_implication_relation_size()
+                context_implication_size = dataWithImplication.strict_total_implication_relation_size()
+                implications_density = float(given_implication_size)/context_implication_size
+                instant3 = current_time_in_millis()
+                dataWithImplication = dataWithImplication.reduct()
+                data_and_implications_load_time_ms =  (current_time_in_millis()-instant3)+(instant2 - instant)
+                result["data_and_implications_load_time_ms"].append(data_and_implications_load_time_ms)
+                print "  Data and Implications Load Time: ",data_and_implications_load_time_ms,"ms"
+                
 
-            result["given_implication_size"].append(given_implication_size)
-            result["context_implication_size"].append(context_implication_size)
-            result["implications_density"].append(implications_density)
-            print "  Given Implication Size:          ",given_implication_size
-            print "  Context Implication Size:        ",context_implication_size
-            print "  Implications density:            ",implications_density
-            
+                result["given_implication_size"].append(given_implication_size)
+                result["context_implication_size"].append(context_implication_size)
+                result["implications_density"].append(implications_density)
+                print "  Given Implication Size:          ",given_implication_size
+                print "  Context Implication Size:        ",context_implication_size
+                print "  Implications density:            ",implications_density
+                
 
-            print "  Running CbOI (use Implications) ..."
-            cboi = CbOI(dataWithImplication)
-            elapsed_time, nb_closed, nb_closure = cboi.start(verbose = False, print_outputs=False)
-            result["cboi_time_ms"].append(elapsed_time)
-            result["cboi_closed_items"].append(nb_closed)
-            result["cboi_nb_closure_computations"].append(nb_closure)
-            print "    Elapsed time:                  ",elapsed_time,"ms"
-            print "    Number of closed patterns:     ",nb_closed
-            print "    Number of closure computations:",nb_closure
- 
-            
-            
-            cbo = CbO(Data.read(data_file_path))
-            elapsed_time, nb_closed, nb_closure = cbo.start(verbose = False, print_outputs=False)
-            result["cbo_time_ms"].append(elapsed_time)
-            result["cbo_closed_items"].append(nb_closed)
-            result["cbo_nb_closure_computations"].append(nb_closure)
-            print "  Running CbO (do not use Implications) ..."
-            print "    Elapsed time:                  ",elapsed_time,"ms"
-            print "    Number of closed patterns:     ",nb_closed
-            print "    Number of closure computations:",nb_closure
-            print "\n\n"+"-"*40+"\n"+"-"*40+"\n\n"
-        pd.DataFrame.from_dict(result).to_csv(Main._compute_output_path_from_file_path(test_file_path,"output"), index=False, columns=column_list)
+                print "  Running CbOI (use Implications) ..."
+                cboi = CbOI(dataWithImplication)
+                elapsed_time, nb_closed, nb_closure = cboi.start(verbose = False, print_outputs=False)
+                result["cboi_time_ms"].append(elapsed_time)
+                result["cboi_closed_items"].append(nb_closed)
+                result["cboi_nb_closure_computations"].append(nb_closure)
+                print "    Elapsed time:                  ",elapsed_time,"ms"
+                print "    Number of closed patterns:     ",nb_closed
+                print "    Number of closure computations:",nb_closure
+     
+                
+                if str(call_cbo).strip() != "no" :
+                    print "  Running CbO (do not use Implications) ..."
+                    cbo = CbO(data)
+                    elapsed_time, nb_closed, nb_closure = cbo.start(verbose = False, print_outputs=False)
+                    result["cbo_time_ms"].append(elapsed_time)
+                    result["cbo_closed_items"].append(nb_closed)
+                    result["cbo_nb_closure_computations"].append(nb_closure)
+                    print "    Elapsed time:                  ",elapsed_time,"ms"
+                    print "    Number of closed patterns:     ",nb_closed
+                    print "    Number of closure computations:",nb_closure
+                else:
+                    result["cbo_time_ms"].append(float("nan"))
+                    result["cbo_closed_items"].append(float("nan"))
+                    result["cbo_nb_closure_computations"].append(float("nan"))
+                print "\n\n"+"-"*40+"\n"+"-"*40+"\n\n"
+                pd.DataFrame.from_dict(result)[-1:].to_csv(f, index=False, columns=column_list, header = False)
+        #"""
+        Latex.output_tex(output_file_name) 
 
     @staticmethod
     def _compute_output_path_from_file_path(file_path, extension, add_suffix = ""):
@@ -293,7 +303,81 @@ class Main:
         result_path+=tail+add_suffix+"."+extension
         return result_path
 
+
+class Latex:
+    @staticmethod
+    def get_parent_dir_name(file_path):
+        head, tail = ntpath.split(file_path)
+        tail = splitext(tail or ntpath.basename(head))[0]
+        head, tail = ntpath.split(head)
+        return tail
+
+    @staticmethod
+    def textbf(string):
+        return "\\textbf{"+string+"}"
+
+    @staticmethod
+    def format_int(number):
+        if math.isnan(number):
+            return ""
+        number = int(number)
+        if number == 0:
+            return "0"
+        result = ""
+        i = 0
+        while number != 0:
+            if i!=0 and i%3 == 0 :
+                result=" "+result
+            result=str(number%10)+result
+            number/=10
+            i+=1
+        return result
     
+    @staticmethod
+    def output_tex(input_file):
+        data = pd.read_csv(input_file)
+        output_file = Main._compute_output_path_from_file_path(input_file,"tex", add_suffix = "-xp1")
+        last_cbo_time_ms = float("nan")
+        last_cbo_nb_closure_computations = float("nan")
+        with open(output_file, 'w') as the_file:
+            for _,row in data.iterrows():
+                filename = Latex.textbf(Latex.get_parent_dir_name(row["dataset_file_path"]))
+                nb_objects = Latex.format_int(row["nb_objects"])
+                nb_attributes = Latex.format_int(row["nb_attributes"])
+                given_implication_size = Latex.format_int(row["given_implication_size"])
+                context_implication_size = Latex.format_int(row["context_implication_size"])
+                implications_density = "%.2f"%(row["implications_density"]*100)+"\\%"
+                nb_closed = Latex.format_int(row["cboi_closed_items"])
+                if not math.isnan(row["cbo_time_ms"]):    
+                    cbo_time_ms = row["cbo_time_ms"]+row["data_load_time_ms"]
+                    last_cbo_time_ms = cbo_time_ms
+                else:
+                    cbo_time_ms = last_cbo_time_ms
+                cboi_time_ms = row["cboi_time_ms"]+row["data_and_implications_load_time_ms"]
+                if cbo_time_ms < cboi_time_ms :
+                    cbo_time_ms = Latex.textbf(Latex.format_int(cbo_time_ms))
+                    cboi_time_ms = Latex.format_int(cboi_time_ms)
+                elif cboi_time_ms < cbo_time_ms:
+                    cboi_time_ms = Latex.textbf(Latex.format_int(cboi_time_ms))
+                    cbo_time_ms = Latex.format_int(cbo_time_ms)
+                
+                if not math.isnan(row["cbo_nb_closure_computations"]):
+                    cbo_nb_closure_computations = row["cbo_nb_closure_computations"]
+                    last_cbo_nb_closure_computations = cbo_nb_closure_computations
+                else:
+                    cbo_nb_closure_computations = last_cbo_nb_closure_computations
+                cboi_nb_closure_computations = row["cboi_nb_closure_computations"]
+                if cbo_nb_closure_computations< cboi_nb_closure_computations :
+                    cbo_nb_closure_computations = Latex.textbf(Latex.format_int(cbo_nb_closure_computations))
+                    cboi_nb_closure_computations = Latex.format_int(cboi_nb_closure_computations)
+                elif cboi_nb_closure_computations < cbo_nb_closure_computations:
+                    cboi_nb_closure_computations = Latex.textbf(Latex.format_int(cboi_nb_closure_computations))
+                    cbo_nb_closure_computations = Latex.format_int(cbo_nb_closure_computations)
+                
+
+                line = "&".join([filename,nb_objects, nb_attributes, nb_closed, given_implication_size, context_implication_size , cbo_time_ms, cbo_nb_closure_computations, cboi_time_ms, cboi_nb_closure_computations])+"\\\\"+"\n"
+                the_file.write(line)
+        
     
         
         
