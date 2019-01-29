@@ -134,34 +134,51 @@ class Main:
 
     @staticmethod
     def _test_with_different_knowledge_density(data_file_path, nb_cut = 10):
+        stat_file_path=Main._compute_output_path_from_file_path(data_file_path,"csv",add_suffix="-stats")
+        #"""
         data_with_implications = DataWithImplication.read_and_reduct(data_file_path, None, True)
         percentages = [float(i)/nb_cut for i in range(0, nb_cut+1)]
         list_of_data = data_with_implications.random_subimplications_list(percentages)
-        
-        list_of_results = reversed(map(lambda data: CbOI(data).start(verbose = False, print_outputs=True),reversed(list_of_data)))
 
+
+        elapsed_time_cbo,closed_patterns_count_cbo,nb_closure_computation_cbo = CbO(data_with_implications.data).start(verbose = False, print_outputs=True)
+        list_of_results = reversed(map(lambda data: CbOI(data).start(verbose = False, print_outputs=True),reversed(list_of_data)))
+        
+        
         x_axis = []
         y_time_axis = []
         nb_closed_axis = []
         y_generated_closed_axis = []
+
+        execution_time_ms_cbo_axis = [elapsed_time_cbo]*len(list_of_data)
+
+        
         
         for i,result in enumerate(list_of_results):
             x_axis.append(list_of_data[i].knowledge_density())
             y_time_axis.append(result[0])
             nb_closed_axis.append(result[1])
             y_generated_closed_axis.append(result[2])
+        
         pd.DataFrame.from_dict({"density":x_axis,
                                 "elapsed time ms":y_time_axis,
                                 "nb closed":nb_closed_axis,
-                                "nb closure":y_generated_closed_axis}).to_csv(
-            Main._compute_output_path_from_file_path(data_file_path,"csv",add_suffix="-"+str(len(x_axis))+"-stats"),
-            index=False, columns=["density","elapsed time ms","nb closed","nb closure"])
-        Main._plot_line_and_bars(x_axis,y_time_axis,y_generated_closed_axis,nb_closed_axis, data_file_path)
+                                "nb closure":y_generated_closed_axis,
+                                "elapsed time cbo":execution_time_ms_cbo_axis}).to_csv(stat_file_path,index=False, columns=["density","elapsed time ms","nb closed","nb closure", "elapsed time cbo"])
+        #"""
+        Main._plot_line_and_bars(stat_file_path)
            
     
     @staticmethod
-    def _plot_line_and_bars(x_axis,y_time_axis,y_generated_closed_axis, nb_closed_axis, data_file_path) :
-        FONTSIZE = 12
+    def _plot_line_and_bars(stat_file_path) :
+        df = pd.read_csv(stat_file_path)
+        x_axis = list(df["density"])
+        y_time_axis = list(df["elapsed time ms"])
+        y_generated_closed_axis = list(df["nb closure"])
+        nb_closed_axis = list(df["nb closed"])
+        execution_time_ms_cbo_axis = list(df["elapsed time cbo"])
+        
+        FONTSIZE = 18
         MARKERSIZE = 20
         LINEWIDTH = 10
         
@@ -175,25 +192,27 @@ class Main:
         timeAx.set_ylabel("Execution time (ms)",fontsize=FONTSIZE)
         timeAx.tick_params(axis='y', labelsize=FONTSIZE)
         
-        barWidth = 1
-        for i in range(len(x_axis)-1):
-            barWidth = min(barWidth, (x_axis[i+1]-x_axis[i])*0.75)
+        barWidth = [(x_axis[1]-x_axis[0])*0.75]
+        for i in range(1,len(x_axis)-1):
+            barWidth.append(min((x_axis[i]-x_axis[i-1])*0.75, (x_axis[i+1]-x_axis[i])*0.75))
+        barWidth.append((x_axis[-1]-x_axis[-2])*0.75)
             
         barsAx.set_yscale("log")
         barsAx.bar(x_axis, y_generated_closed_axis, width = barWidth, align='center', color= "gray", alpha = 0.8)
         barsAx.bar(x_axis, nb_closed_axis, width = barWidth, align='center', color= "gray", alpha = 0.8, hatch = "//")
-        timeAx.errorbar(x_axis, y_time_axis, fmt = "o-", linewidth=LINEWIDTH,markersize=MARKERSIZE,color= "black")
+        timeAx.errorbar(x_axis, y_time_axis, fmt = "o-", linewidth=LINEWIDTH,markersize=MARKERSIZE,color= "black", label="CbOI")
+        timeAx.errorbar(x_axis, execution_time_ms_cbo_axis, fmt = "D--", linewidth=LINEWIDTH-3,markersize=MARKERSIZE-5,color= "gray", label="CbO")
         timeAx.set_yscale("log")
         labels = [item.get_text() for item in barsAx.get_xticklabels()]
 
         frequency = 5
         x_axis_ticks = [(float(i)/frequency) for i in range(frequency+1)]
-        plt.xticks(x_axis_ticks, map(lambda v : "{0:.2f}".format(v*100)+"%",x_axis_ticks))
-        
+        plt.xticks(x_axis_ticks, map(lambda v : "{0:.0f}".format(v*100)+"%",x_axis_ticks))
+        legend = timeAx.legend(loc='lower right', shadow=True, fontsize=FONTSIZE+5)
         
         
         fig.tight_layout()
-        plt.savefig(Main._compute_output_path_from_file_path(data_file_path,"pdf",add_suffix="-"+str(len(x_axis))))
+        plt.savefig(Main._compute_output_path_from_file_path(stat_file_path,"pdf"))
         #plt.show()
     
     @staticmethod
@@ -340,7 +359,7 @@ class Latex:
         last_cbo_time_ms = float("nan")
         last_cbo_nb_closure_computations = float("nan")
         with open(output_file, 'w') as the_file:
-            for _,row in data.iterrows():
+            for i,row in data.iterrows():
                 filename = Latex.textbf(Latex.get_parent_dir_name(row["dataset_file_path"]))
                 nb_objects = Latex.format_int(row["nb_objects"])
                 nb_attributes = Latex.format_int(row["nb_attributes"])
@@ -375,7 +394,7 @@ class Latex:
                     cbo_nb_closure_computations = Latex.format_int(cbo_nb_closure_computations)
                 
 
-                line = "&".join([filename,nb_objects, nb_attributes, nb_closed, given_implication_size, context_implication_size , cbo_time_ms, cbo_nb_closure_computations, cboi_time_ms, cboi_nb_closure_computations])+"\\\\"+"\n"
+                line = "&".join([str(i+1),filename,nb_objects, nb_attributes, nb_closed, given_implication_size, context_implication_size , cbo_time_ms, cbo_nb_closure_computations, cboi_time_ms, cboi_nb_closure_computations])+"\\\\"+"\n"
                 the_file.write(line)
         
     

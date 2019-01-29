@@ -66,7 +66,10 @@ class Data :
         """
         if not representation: return []
         reversed_size = max(map(max,filter(lambda e : len(e)>0, representation)))+1
-        return [frozenset([i for i,elements in enumerate(representation) if element in elements]) for element in range(reversed_size)]
+        result = []
+        for element in range(reversed_size):
+            result.append(frozenset([i for i,elements in enumerate(representation) if element in elements]))
+        return result
 
     def get_column_clarified_dataset(self):
         return self.fusion_equivalent_itemsets(self.get_equivalent_items())

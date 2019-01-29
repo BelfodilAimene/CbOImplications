@@ -1,9 +1,10 @@
 data_file_path,implication_file_path,call_cbo
 test/xp1/Europarl-noimplications/input.data,,yes
-test/xp1/Europarl-all/input.data,__COMPUTE__,no
 test/xp1/Europarl-ordinal/input.data,test/xp1/Europarl-ordinal/input.implications,no
+test/xp1/Europarl-allimplications/input.data,__COMPUTE__,no
 test/xp1/Yelp-1000/input.data,test/xp1/Yelp-1000/input.implications,yes
 test/xp1/Yelp-10000/input.data,test/xp1/Yelp-10000/input.implications,yes
 test/xp1/Yelp-50000/input.data,test/xp1/Yelp-50000/input.implications,yes
+test/xp1/Yelp-all/input.data,test/xp1/Yelp-all/input.implications,yes
 test/xp1/BL-interordinal/input.data,test/xp1/BL-interordinal/input.implications,yes
-test/xp1/BL-all/input.data,__COMPUTE__,no
+test/xp1/BL-allimplications/input.data,__COMPUTE__,no
