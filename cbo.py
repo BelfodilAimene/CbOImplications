@@ -72,9 +72,6 @@ class CbOItemset:
     def __str__(self):
         result = ""
         result += "itemset = '"+" ".join(map(str,self.itemset))+"'\n"
-        result += "leaves = '"+" ".join(map(str,self.leaves))+"'\n"
-        result += "addables = '"+" ".join(map(str,self.addables))+"'\n"
-        result += "future_addables = '"+" ".join(map(str,self.future_addables))+"'\n"
         result += "extent = '"+" ".join(map(str,self.extent))+"'\n"
         return result        
             

@@ -130,4 +130,10 @@ class Data :
 
     def __str__(self):
         return "\n".join([self._str_itemset(itemset, separator = " ") for itemset in self.horizontal])
+
+    def info(self):
+        result = "Data Information:\n"
+        result+="  "+"Number of objects:                  "+str(self.n)+"\n"
+        result+="  "+"Number of attributes:               "+str(self.m)+"\n"
+        return result
         

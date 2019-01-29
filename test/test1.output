@@ -1,4 +1,4 @@
 dataset_file_path,implication_file_path,nb_objects,nb_attributes,given_implication_size,context_implication_size,implications_density,data_load_time_ms,cbo_time_ms,cbo_closed_items,cbo_nb_closure_computations,data_and_implications_load_time_ms,cboi_time_ms,cboi_closed_items,cboi_nb_closure_computations
-data/hmt/deputies/input.data,,4757,358,0,1034,0.0,89,702,1308,185776,176,1981,1308,185762
-data/hmt/deputies/input.data,data/hmt/deputies/input.implications,4757,358,709,1034,0.6856866537717602,91,693,1308,185776,181,120,1308,16611
-data/hmt/deputies/input.data,__COMPUTE__,4757,358,1034,1034,1.0,90,704,1308,185776,193,143,1308,13287
+data/hmt/deputies/input.data,,4757,358,0,1034,0.0,85,667,1308,185776,171,1990,1308,185776
+data/hmt/deputies/input.data,data/hmt/deputies/input.implications,4757,358,709,1034,0.6856866537717602,87,674,1308,185776,174,126,1308,17007
+data/hmt/deputies/input.data,__COMPUTE__,4757,358,1034,1034,1.0,87,674,1308,185776,187,178,1308,14930

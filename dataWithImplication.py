@@ -332,6 +332,17 @@ class DataWithImplication:
                 current_filter.add(i) 
             
         return current_filter
+
+    def info(self):
+        result = self.data.info()
+        result+="Implications Information:\n" 
+        strict_implication_relation_size = self.strict_implication_relation_size()
+        strict_total_implication_relation_size = self.strict_total_implication_relation_size()
+        knowledge_density = float(strict_implication_relation_size)/strict_total_implication_relation_size
+        result+="  "+"Size of provided implication basis: "+str(strict_implication_relation_size)+"\n"
+        result+="  "+"Size of context implication basis:  "+str(strict_total_implication_relation_size)+"\n"
+        result+="  "+"Knowledge density:                  "+("%.2f"%(knowledge_density*100))+"%"+"\n"
+        return result
                 
                 
         

@@ -78,13 +78,23 @@ class Main:
 
     @staticmethod
     def cbo(args):
+        t = current_time_in_millis()
         data = Data.read(args.data)
+        load_time = current_time_in_millis()-t
+        print dataWithImplication.info()
+        print "Data Load time:",load_time,"ms"
         cbo = CbO(data)
         cbo.start(verbose = args.verbose)
 
     @staticmethod
     def cboi(args):
-        dataWithImplication = DataWithImplication.read_and_reduct(args.data, args.implications, args.compute_implications)
+        t = current_time_in_millis()
+        dataWithImplication = DataWithImplication.read(args.data, args.implications, args.compute_implications)
+        info = dataWithImplication.info()
+        dataWithImplication = dataWithImplication.reduct()
+        load_time = current_time_in_millis()-t
+        print info
+        print "Data Load time:",load_time,"ms"
         cboi = CbOI(dataWithImplication)
         cboi.start(verbose = args.verbose)
         
@@ -209,7 +219,7 @@ class Main:
             compute = False
             if not implication_file_path :
                 implication_file_path = None
-            elif implication_file_path == "__COMPUTE__" :
+            elif implication_file_path == KEY_WORD :
                 implication_file_path = None
                 compute = True
 
