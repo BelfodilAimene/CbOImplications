@@ -12,6 +12,7 @@ class CbOI(Enumerator) :
         """
         super(CbOI, self).__init__(dataWithImplications.data)
         self.implications = dataWithImplications
+        self.parents_degrees = map(len, self.implications.parents)
         
     def _start(self, *args,**kwargs):
         self.nb_closure_computation = 1 #Computing the closure of the emptyset
@@ -50,7 +51,7 @@ class CbOI(Enumerator) :
         for child in self.implications.childs[item]:
             ancient_value = future_addables.get(child, -1)
             if ancient_value == -1:
-                parent_degrees = len(self.implications.parents[child])
+                parent_degrees = self.parents_degrees[child]
                 
                 if parent_degrees == 1:
                     addables.add(child)

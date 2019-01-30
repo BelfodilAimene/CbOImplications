@@ -136,13 +136,13 @@ class Main:
     def _test_with_different_knowledge_density(data_file_path, nb_cut = 10):
         stat_file_path=Main._compute_output_path_from_file_path(data_file_path,"csv",add_suffix="-stats")
         #"""
-        data_with_implications = DataWithImplication.read_and_reduct(data_file_path, None, True)
+        data_with_implications = DataWithImplication.read(data_file_path, None, True)
         percentages = [float(i)/nb_cut for i in range(0, nb_cut+1)]
         list_of_data = data_with_implications.random_subimplications_list(percentages)
 
 
         elapsed_time_cbo,closed_patterns_count_cbo,nb_closure_computation_cbo = CbO(data_with_implications.data).start(verbose = False, print_outputs=True)
-        list_of_results = reversed(map(lambda data: CbOI(data).start(verbose = False, print_outputs=True),reversed(list_of_data)))
+        list_of_results = reversed(map(lambda data: CbOI(data.reduct()).start(verbose = False, print_outputs=True),reversed(list_of_data)))
         
         
         x_axis = []
