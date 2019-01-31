@@ -2,6 +2,10 @@ from tarjan import tarjan
 from data import Data
 import math, random
 
+import networkx as nx
+import matplotlib.pyplot as plt
+
+
 class DataWithImplication:
     def __init__(self, data, childs, parents):
         """
@@ -343,7 +347,16 @@ class DataWithImplication:
         result+="  "+"Size of context implication basis:  "+str(strict_total_implication_relation_size)+"\n"
         result+="  "+"Knowledge density:                  "+("%.2f"%(knowledge_density*100))+"%"+"\n"
         return result
-                
+
+    def plot_implications(self):
+        G = nx.DiGraph()
+        G.add_nodes_from(self.data.alphabet)
+        for i, parent in enumerate(self.parents):
+            for j in parent:
+                G.add_edge(self.data.alphabet[i], self.data.alphabet[j])
+        nx.draw(G, with_labels=True, font_weight='bold')
+        plt.show()
+  
                 
         
 

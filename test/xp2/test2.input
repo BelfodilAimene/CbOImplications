@@ -1,0 +1,4 @@
+data_file_path,implication_file_path,call_cbo
+test/xp1/Europarl/input.data,__COMPUTE__,yes
+test/xp1/Yelp/input.data,__COMPUTE__,yes
+test/xp1/BL/input.data,__COMPUTE__,yes

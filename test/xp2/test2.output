@@ -1,0 +1,4 @@
+dataset_file_path,implication_file_path,nb_objects,nb_attributes,given_implication_size,context_implication_size,implications_density,data_load_time_ms,cbo_time_ms,cbo_closed_items,cbo_nb_closure_computations,data_and_implications_load_time_ms,cboi_time_ms,cboi_closed_items,cboi_nb_closure_computations
+test/xp1/Europarl/input.data,__COMPUTE__,4757,358,1034,1034,1.0,83,189,1308,185776,206,44,1308,13287
+test/xp1/Yelp/input.data,__COMPUTE__,127162,1174,2111,2111,1.0,9550,37149,63300,24437659,19976,15030,63300,2974130
+test/xp1/BL/input.data,__COMPUTE__,40,272,13724,13724,1.0,3,64577,272223,13340233,39,9114,272223,445735

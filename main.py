@@ -69,7 +69,7 @@ class Main:
         parser_test.add_argument("input_data", type=str,help="test file path")
         parser_test.set_defaults(func = Main.runtest)
 
-        parser_test_with_different_implications=subparsers.add_parser("test_with_different_implications",help="Run test on a data file using different item-implication basis densities")
+        parser_test_with_different_implications=subparsers.add_parser("test_densities",help="Run test on a data file using different item-implication basis densities")
         parser_test_with_different_implications.add_argument("input_data", type=str,help="test file path")
         parser_test_with_different_implications.add_argument("-n", "--nb_cuts", type=int, default=10,help="number of ticks in density axis")
         parser_test_with_different_implications.set_defaults(func = Main.runtest_with_different_implications)
@@ -355,47 +355,84 @@ class Latex:
     @staticmethod
     def output_tex(input_file):
         data = pd.read_csv(input_file)
-        output_file = Main._compute_output_path_from_file_path(input_file,"tex", add_suffix = "-xp1")
-        last_cbo_time_ms = float("nan")
+        stat_output_file = Main._compute_output_path_from_file_path(input_file,"tex", add_suffix = "-xp1-stats")
+        data_output_file = Main._compute_output_path_from_file_path(input_file,"tex", add_suffix = "-xp1-data")
         last_cbo_nb_closure_computations = float("nan")
-        with open(output_file, 'w') as the_file:
-            for i,row in data.iterrows():
-                filename = Latex.textbf(Latex.get_parent_dir_name(row["dataset_file_path"]))
-                nb_objects = Latex.format_int(row["nb_objects"])
-                nb_attributes = Latex.format_int(row["nb_attributes"])
-                given_implication_size = Latex.format_int(row["given_implication_size"])
-                context_implication_size = Latex.format_int(row["context_implication_size"])
-                implications_density = "%.2f"%(row["implications_density"]*100)+"\\%"
-                nb_closed = Latex.format_int(row["cboi_closed_items"])
-                if not math.isnan(row["cbo_time_ms"]):    
-                    cbo_time_ms = row["cbo_time_ms"]+row["data_load_time_ms"]
-                    last_cbo_time_ms = cbo_time_ms
-                else:
-                    cbo_time_ms = last_cbo_time_ms
-                cboi_time_ms = row["cboi_time_ms"]+row["data_and_implications_load_time_ms"]
-                if cbo_time_ms < cboi_time_ms :
-                    cbo_time_ms = Latex.textbf(Latex.format_int(cbo_time_ms))
-                    cboi_time_ms = Latex.format_int(cboi_time_ms)
-                elif cboi_time_ms < cbo_time_ms:
-                    cboi_time_ms = Latex.textbf(Latex.format_int(cboi_time_ms))
-                    cbo_time_ms = Latex.format_int(cbo_time_ms)
-                
-                if not math.isnan(row["cbo_nb_closure_computations"]):
-                    cbo_nb_closure_computations = row["cbo_nb_closure_computations"]
-                    last_cbo_nb_closure_computations = cbo_nb_closure_computations
-                else:
-                    cbo_nb_closure_computations = last_cbo_nb_closure_computations
-                cboi_nb_closure_computations = row["cboi_nb_closure_computations"]
-                if cbo_nb_closure_computations< cboi_nb_closure_computations :
-                    cbo_nb_closure_computations = Latex.textbf(Latex.format_int(cbo_nb_closure_computations))
-                    cboi_nb_closure_computations = Latex.format_int(cboi_nb_closure_computations)
-                elif cboi_nb_closure_computations < cbo_nb_closure_computations:
-                    cboi_nb_closure_computations = Latex.textbf(Latex.format_int(cboi_nb_closure_computations))
-                    cbo_nb_closure_computations = Latex.format_int(cbo_nb_closure_computations)
-                
+        last_cbo_time_ms = float("nan")
+        with open(data_output_file, 'w') as data_file:
+            with open(stat_output_file, 'w') as stat_file:
+                for i,row in data.iterrows():
+                    filename = Latex.get_parent_dir_name(row["dataset_file_path"])
+                    nb_objects = Latex.format_int(row["nb_objects"])
+                    nb_attributes = Latex.format_int(row["nb_attributes"])
+                    given_implication_size = Latex.format_int(row["given_implication_size"])
+                    context_implication_size = Latex.format_int(row["context_implication_size"])
+                    implications_density = "%.2f"%(row["implications_density"]*100)+"\\%"
+                    nb_closed = Latex.format_int(row["cboi_closed_items"])
 
-                line = "&".join([str(i+1),filename,nb_objects, nb_attributes, nb_closed, given_implication_size, context_implication_size , cbo_time_ms, cbo_nb_closure_computations, cboi_time_ms, cboi_nb_closure_computations])+"\\\\"+"\n"
-                the_file.write(line)
+                    context_id = "\mathbb{K}_{"+str(i+1)+"}"
+                    if row["given_implication_size"] == row["context_implication_size"]:
+                        implication_id = "\\rightarrow"
+                        input_id = "$"+context_id+"$"
+                    else:
+                        implication_id = "\mathfrak{I}_{"+str(i+1)+"}"
+                        input_id = "$("+context_id+","+implication_id+")$"
+
+                    if not math.isnan(row["cbo_nb_closure_computations"]):
+                        cbo_nb_closure_computations = row["cbo_nb_closure_computations"]
+                        last_cbo_nb_closure_computations = cbo_nb_closure_computations
+                    else:
+                        cbo_nb_closure_computations = last_cbo_nb_closure_computations
+                    cboi_nb_closure_computations = row["cboi_nb_closure_computations"]
+                    
+
+                    cbo_load_ms = row["data_load_time_ms"]
+                    if not math.isnan(row["cbo_time_ms"]):    
+                        cbo_time_ms = row["cbo_time_ms"]
+                        last_cbo_time_ms = cbo_time_ms
+                    else:
+                        cbo_time_ms = last_cbo_time_ms
+                    cbo_total_ms = cbo_load_ms + cbo_time_ms
+                    
+                    cboi_time_ms = row["cboi_time_ms"]
+                    cboi_load_ms = row["data_and_implications_load_time_ms"]
+                    cboi_total_ms = cboi_load_ms + cboi_time_ms
+
+                    if cbo_nb_closure_computations< cboi_nb_closure_computations :
+                        cbo_nb_closure_computations = Latex.textbf(Latex.format_int(cbo_nb_closure_computations))
+                        cboi_nb_closure_computations = Latex.format_int(cboi_nb_closure_computations)
+                    elif cboi_nb_closure_computations < cbo_nb_closure_computations:
+                        cboi_nb_closure_computations = Latex.textbf(Latex.format_int(cboi_nb_closure_computations))
+                        cbo_nb_closure_computations = Latex.format_int(cbo_nb_closure_computations)
+
+                    if cbo_load_ms < cboi_load_ms :
+                        cbo_load_ms = Latex.textbf(Latex.format_int(cbo_load_ms))
+                        cboi_load_ms = Latex.format_int(cboi_load_ms)
+                    elif cboi_time_ms < cbo_time_ms:
+                        cboi_load_ms = Latex.textbf(Latex.format_int(cboi_load_ms))
+                        cbo_load_ms = Latex.format_int(cbo_load_ms)
+
+                    if cbo_time_ms < cboi_time_ms :
+                        cbo_time_ms = Latex.textbf(Latex.format_int(cbo_time_ms))
+                        cboi_time_ms = Latex.format_int(cboi_time_ms)
+                    elif cboi_time_ms < cbo_time_ms:
+                        cboi_time_ms = Latex.textbf(Latex.format_int(cboi_time_ms))
+                        cbo_time_ms = Latex.format_int(cbo_time_ms)
+
+                    if cbo_total_ms < cboi_total_ms :
+                        cbo_total_ms = Latex.textbf(Latex.format_int(cbo_total_ms))
+                        cboi_total_ms = Latex.format_int(cboi_total_ms)
+                    elif cboi_total_ms < cbo_total_ms:
+                        cboi_total_ms = Latex.textbf(Latex.format_int(cboi_total_ms))
+                        cbo_total_ms = Latex.format_int(cbo_total_ms)
+
+                    
+                    
+                    line_data = "&".join([input_id,filename,nb_objects, nb_attributes, nb_closed, given_implication_size, context_implication_size, implications_density])+"\\\\"+"\n"
+                    line_stats = "&".join([input_id,cbo_nb_closure_computations, cbo_load_ms, cbo_time_ms, cbo_total_ms,cboi_nb_closure_computations, cboi_load_ms, cboi_time_ms, cboi_total_ms])+"\\\\"+"\n"
+                    
+                    stat_file.write(line_stats)
+                    data_file.write(line_data)
         
     
         
