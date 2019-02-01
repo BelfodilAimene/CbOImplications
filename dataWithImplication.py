@@ -25,6 +25,8 @@ class DataWithImplication:
         return sum(map(lambda i: len(DataWithImplication.get_real_filter(self.data,i)), range(self.data.m)))-self.data.m  
 
     def knowledge_density(self):
+        total = self.strict_total_implication_relation_size()
+        if total == 0 : return 1.
         return float(self.strict_implication_relation_size())/self.strict_total_implication_relation_size()
                 
             
@@ -342,7 +344,7 @@ class DataWithImplication:
         result+="Implications Information:\n" 
         strict_implication_relation_size = self.strict_implication_relation_size()
         strict_total_implication_relation_size = self.strict_total_implication_relation_size()
-        knowledge_density = float(strict_implication_relation_size)/strict_total_implication_relation_size
+        knowledge_density = float(strict_implication_relation_size)/strict_total_implication_relation_size if strict_total_implication_relation_size>0 else 1. 
         result+="  "+"Size of provided implication basis: "+str(strict_implication_relation_size)+"\n"
         result+="  "+"Size of context implication basis:  "+str(strict_total_implication_relation_size)+"\n"
         result+="  "+"Knowledge density:                  "+("%.2f"%(knowledge_density*100))+"%"+"\n"

@@ -1,0 +1,5 @@
+data_file_path,implication_file_path,call_cbo
+data/Iris/input.data,data/Iris/input.implications,yes
+data/Iris/input.data,__COMPUTE__,no
+data/Basketball/input.data,data/Basketball/input.implications,yes
+data/Basketball/input.data,__COMPUTE__,no

@@ -1,0 +1,3 @@
+data_file_path,implication_file_path,call_cbo
+data/Airport/input.data,data/Airport/input.implications,yes
+data/Airport/input.data,__COMPUTE__,no

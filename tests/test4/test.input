@@ -1,0 +1,3 @@
+data_file_path,implication_file_path,call_cbo
+data/Mushrooms/input.data,data/Mushrooms/input.implications,yes
+data/Mushrooms/input.data,__COMPUTE__,no

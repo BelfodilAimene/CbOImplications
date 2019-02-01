@@ -250,7 +250,7 @@ class Main:
                 instant2 =  current_time_in_millis()
                 given_implication_size = dataWithImplication.strict_implication_relation_size()
                 context_implication_size = dataWithImplication.strict_total_implication_relation_size()
-                implications_density = float(given_implication_size)/context_implication_size
+                implications_density = float(given_implication_size)/context_implication_size if context_implication_size>0 else 1.
                 instant3 = current_time_in_millis()
                 dataWithImplication = dataWithImplication.reduct()
                 data_and_implications_load_time_ms =  (current_time_in_millis()-instant3)+(instant2 - instant)
@@ -355,12 +355,17 @@ class Latex:
                     context_id = "\mathbb{K}_{"+str(i+1)+"}"
                     if row["given_implication_size"] == row["context_implication_size"]:
                         implication_id = "\\rightarrow"
-                        input_id = "$"+context_id+"$"
+                        input_id = "$("+context_id+","+implication_id+")$"
                     else:
                         implication_id = "\mathfrak{I}_{"+str(i+1)+"}"
                         input_id = "$("+context_id+","+implication_id+")$"
 
-                    if not math.isnan(row["cbo_nb_closure_computations"]):
+                    if math.isnan(row["cbo_nb_closure_computations"]) :
+                        cbo_done = False
+                    else:
+                        cbo_done = True
+
+                    if cbo_done:
                         cbo_nb_closure_computations = row["cbo_nb_closure_computations"]
                         last_cbo_nb_closure_computations = cbo_nb_closure_computations
                     else:
@@ -369,7 +374,7 @@ class Latex:
                     
 
                     cbo_load_ms = row["data_load_time_ms"]
-                    if not math.isnan(row["cbo_time_ms"]):    
+                    if cbo_done:    
                         cbo_time_ms = row["cbo_time_ms"]
                         last_cbo_time_ms = cbo_time_ms
                     else:
@@ -421,7 +426,12 @@ class Latex:
                         cboi_total_ms = Latex.textbf(Latex.format_int(cboi_total_ms))
                         cbo_total_ms = Latex.format_int(cbo_total_ms)
 
-                    
+                    if not cbo_done:
+                        cbo_nb_closure_computations = ""
+                        cbo_load_ms = ""
+                        cbo_time_ms = ""
+                        cbo_total_ms = ""
+                        
                     
                     line_data = "&".join([input_id,filename,nb_objects, nb_attributes, nb_closed, given_implication_size, context_implication_size, implications_density])+"\\\\"+"\n"
                     line_stats = "&".join([input_id,cbo_nb_closure_computations, cbo_load_ms, cbo_time_ms, cbo_total_ms,cboi_nb_closure_computations, cboi_load_ms, cboi_time_ms, cboi_total_ms])+"\\\\"+"\n"

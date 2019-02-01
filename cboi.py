@@ -68,6 +68,9 @@ class CbOI(Enumerator) :
     def add_and_close_in(self, extent, itemset, leaves, addables, future_addables, item, forbidden):
         vertical = self.data.vertical
         new_extent = extent & vertical[item]
+        # Case empty:
+        if forbidden and not new_extent : return None
+        # ----------
         for i in addables & forbidden:
             if vertical[i] >= new_extent : return None
 

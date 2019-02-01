@@ -15,6 +15,7 @@ class CbO(Enumerator) :
 
                 new_extent = extent & vertical[item]
                 self.nb_closure_computation+=1
+
                 canonicity_test_fail = False
                 for i in xrange(item):
                     if i in itemset : continue
@@ -29,7 +30,7 @@ class CbO(Enumerator) :
                     if i in itemset : continue
                     if vertical[i] >= new_extent : new_itemset.add(i)
                 
-                stack.append((new_extent,new_itemset, item))
+                stack.append((new_extent,new_itemset, item+1))
             yield itemset, extent
             
     def __str__(self):
