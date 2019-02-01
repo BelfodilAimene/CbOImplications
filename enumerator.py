@@ -28,7 +28,7 @@ class Enumerator :
         t1 = current_time_in_millis()
         for itemset, extent in self._start(*args,**kwargs):
             self.nb_closed += 1
-            if (self.nb_closed%10000 == 0): print "        -- Nb Closed Patterns:",self.nb_closed
+            if (self.nb_closed%100000 == 0): print "        -- Nb Closed Patterns:",self.nb_closed
             if self.verbose:
                 print self.data._str_itemset(itemset)+":\n  extent = "+" ".join(map(str,extent))
         t2 = current_time_in_millis()

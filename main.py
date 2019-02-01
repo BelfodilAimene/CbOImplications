@@ -1,5 +1,4 @@
-from numericalData import NumericalData
-from hmtData import HMTData
+from complexData import ComplexData
 
 from data import Data
 from dataWithImplication import DataWithImplication
@@ -23,6 +22,8 @@ from matplotlib import colors,markers
 from utils import current_time_in_millis
 import math
 
+
+
 class Main:
     @staticmethod
     def main():
@@ -44,17 +45,11 @@ class Main:
         parser_cboi.add_argument('-v','--verbose', action='store_true',help="verbose")
         parser_cboi.set_defaults(func = Main.cboi)
 
-        parser_interordinal=subparsers.add_parser("interordinal",help="Transform a csv numerical dataset to an inter-ordinal scaled dataset with its implications")
-        parser_interordinal.add_argument("input_data", type=str,help="filepath of numerical dataset")
-        parser_interordinal.add_argument("-od", "--output_data", type=str,help="filepath of numerical dataset", required=False)
-        parser_interordinal.add_argument("-oi", "--output_implications", type=str,help="filepath of numerical dataset", required=False)
-        parser_interordinal.set_defaults(func = Main.interordinal)
-
-        parser_ordinal=subparsers.add_parser("ordinal",help="Transform a csv dataset with a taxonomy to an ordinal scaled dataset with its implications")
-        parser_ordinal.add_argument("input_data", type=str,help="filepath of dataset with a taxonomy")
-        parser_ordinal.add_argument("-od", "--output_data", type=str,help="filepath of numerical dataset", required=False)
-        parser_ordinal.add_argument("-oi", "--output_implications", type=str,help="filepath of numerical dataset", required=False)
-        parser_ordinal.set_defaults(func = Main.ordinal)
+        parser_scale = subparsers.add_parser("scale",help="Transform a csv complex dataset to a context with implications. It does support now heterogenous datasets with numerical, hmt and nominal")
+        parser_scale.add_argument("input_data", type=str,help="filepath of complex dataset")
+        parser_scale.add_argument("-od", "--output_data", type=str,help="filepath of context", required=False)
+        parser_scale.add_argument("-oi", "--output_implications", type=str,help="filepath of implications file", required=False)
+        parser_scale.set_defaults(func = Main.scale)
 
         parser_subdataset=subparsers.add_parser("subdataset",help="compute a random sub dataset")
         parser_subdataset.add_argument("-d", "--data", type=str,help="filepath of dataset", required=True)
@@ -100,29 +95,13 @@ class Main:
         cboi.start(verbose = args.verbose)
         
 
+    @staticmethod
+    def scale(args):
+        ComplexData.read_scale_and_write(args.input_data, args.output_data, args.output_implications)
         
-    @staticmethod
-    def interordinal(args):
-        numerical_dataset = NumericalData.read(args.input_data).interoridnal_scaling()
-        output_data_file = args.output_data if args.output_data else Main._compute_output_path_from_file_path(args.input_data, "data")
-        output_implications_file = args.output_implications if args.output_implications else Main._compute_output_path_from_file_path(args.input_data, "implications")
-        numerical_dataset.write(output_data_file,output_implications_file)
-
-    @staticmethod
-    def ordinal(args):
-        hmt_dataset = HMTData.read(args.input_data).ordinal_scaling()
-        output_data_file = args.output_data if args.output_data else Main._compute_output_path_from_file_path(args.input_data, "data")
-        output_implications_file = args.output_implications if args.output_implications else Main._compute_output_path_from_file_path(args.input_data, "implications")
-        hmt_dataset.write(output_data_file,output_implications_file)
-
     @staticmethod
     def runtest(args):
         Main._test(args.input_data)
-
-    ## TODO: Add Graph of CbO Exectution time (ms)
-    @staticmethod
-    def runtest_with_different_implications(args):
-        Main._test_with_different_knowledge_density(args.input_data, args.nb_cuts)
 
     @staticmethod
     def subdataset(args):
@@ -130,7 +109,10 @@ class Main:
         dataWithImplication = dataWithImplication.random_subdataset_and_subimplications(args.percentage_objects,args.percentage_attributes,args.percentage_implications)
         suffix="-{0:.2f}-{1:.2f}-{2:.2f}".format(args.percentage_objects,args.percentage_attributes,args.percentage_implications)
         dataWithImplication.write(Main._compute_output_path_from_file_path(args.data, "data", suffix),Main._compute_output_path_from_file_path(args.data, "implications", suffix))
-        
+
+    @staticmethod
+    def runtest_with_different_implications(args):
+        Main._test_with_different_knowledge_density(args.input_data, args.nb_cuts)
 
     @staticmethod
     def _test_with_different_knowledge_density(data_file_path, nb_cut = 10):
@@ -338,7 +320,7 @@ class Latex:
     @staticmethod
     def format_int(number):
         if math.isnan(number):
-            return ""
+            return "NA"
         number = int(number)
         if number == 0:
             return "0"
@@ -398,17 +380,24 @@ class Latex:
                     cboi_load_ms = row["data_and_implications_load_time_ms"]
                     cboi_total_ms = cboi_load_ms + cboi_time_ms
 
-                    if cbo_nb_closure_computations< cboi_nb_closure_computations :
+                    if cbo_nb_closure_computations < cboi_nb_closure_computations :
                         cbo_nb_closure_computations = Latex.textbf(Latex.format_int(cbo_nb_closure_computations))
                         cboi_nb_closure_computations = Latex.format_int(cboi_nb_closure_computations)
                     elif cboi_nb_closure_computations < cbo_nb_closure_computations:
                         cboi_nb_closure_computations = Latex.textbf(Latex.format_int(cboi_nb_closure_computations))
                         cbo_nb_closure_computations = Latex.format_int(cbo_nb_closure_computations)
-
+                    else:
+                        cboi_nb_closure_computations = Latex.textbf(Latex.format_int(cboi_nb_closure_computations))
+                        cbo_nb_closure_computations = Latex.format_int(cbo_nb_closure_computations)
+                        
+                    
                     if cbo_load_ms < cboi_load_ms :
                         cbo_load_ms = Latex.textbf(Latex.format_int(cbo_load_ms))
                         cboi_load_ms = Latex.format_int(cboi_load_ms)
                     elif cboi_time_ms < cbo_time_ms:
+                        cboi_load_ms = Latex.textbf(Latex.format_int(cboi_load_ms))
+                        cbo_load_ms = Latex.format_int(cbo_load_ms)
+                    else:
                         cboi_load_ms = Latex.textbf(Latex.format_int(cboi_load_ms))
                         cbo_load_ms = Latex.format_int(cbo_load_ms)
 
@@ -418,11 +407,17 @@ class Latex:
                     elif cboi_time_ms < cbo_time_ms:
                         cboi_time_ms = Latex.textbf(Latex.format_int(cboi_time_ms))
                         cbo_time_ms = Latex.format_int(cbo_time_ms)
+                    else:
+                        cboi_time_ms = Latex.textbf(Latex.format_int(cboi_time_ms))
+                        cbo_time_ms = Latex.format_int(cbo_time_ms)
 
                     if cbo_total_ms < cboi_total_ms :
                         cbo_total_ms = Latex.textbf(Latex.format_int(cbo_total_ms))
                         cboi_total_ms = Latex.format_int(cboi_total_ms)
                     elif cboi_total_ms < cbo_total_ms:
+                        cboi_total_ms = Latex.textbf(Latex.format_int(cboi_total_ms))
+                        cbo_total_ms = Latex.format_int(cbo_total_ms)
+                    else:
                         cboi_total_ms = Latex.textbf(Latex.format_int(cboi_total_ms))
                         cbo_total_ms = Latex.format_int(cbo_total_ms)
 
@@ -437,11 +432,5 @@ class Latex:
     
         
         
-#data = Data.read("data/hmt/deputies/input.data")
-#Main._test_with_different_knowledge_density(data)
-
-
-
 if __name__=="__main__" :
     Main.main()
-    #Main._test("test/test1.input")
