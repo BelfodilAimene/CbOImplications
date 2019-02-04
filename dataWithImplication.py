@@ -153,6 +153,8 @@ class DataWithImplication:
         return DataWithImplication(data,childs,parents)
 
     def reduct(self):
+        if self.nb_implications == 0 :
+            return self
         implications = list(self.parents)
         data = self.data
         

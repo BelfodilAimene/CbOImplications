@@ -1,3 +1,3 @@
 dataset_file_path,implication_file_path,nb_objects,nb_attributes,given_implication_size,context_implication_size,implications_density,data_load_time_ms,cbo_time_ms,cbo_closed_items,cbo_nb_closure_computations,data_and_implications_load_time_ms,cboi_time_ms,cboi_closed_items,cboi_nb_closure_computations
-data/Mushrooms/input.data,data/Mushrooms/input.implications,8124,119,0,949,0.0,174,13607,238710,4363487,278,22054,238710,4363511
-data/Mushrooms/input.data,__COMPUTE__,8124,119,949,949,1.0,146,,,,246,10772,238710,1338245
+data/Mushrooms/input.data,data/Mushrooms/input.implications,8124,119,0,949,0.0,155,13800,238710,4363487,184,15985,238710,4363511
+data/Mushrooms/input.data,__COMPUTE__,8124,119,949,949,1.0,157,,,,244,10003,238710,1338245

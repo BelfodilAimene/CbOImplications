@@ -61,7 +61,7 @@ class ComplexData :
         for value in column_values:
             new_value = set()
             for item in value.split(" "):
-                list_of_one_items = ComplexData.get_items_from_hmt_item(item)
+                list_of_one_items = map(lambda x : column_name+"-is-"+x, ComplexData.get_items_from_hmt_item(item))
                 if len(list_of_one_items)>0:
                     new_value.add(list_of_one_items[0])
                     for i in range(1, len(list_of_one_items)):
