@@ -52,7 +52,7 @@ class ComplexData :
 
     @staticmethod
     def nominal_scale(column_name, column_values):
-        return [[column_name+"="+value] for value in column_values], set()
+        return [[column_name+"="+str(value)] for value in column_values], set()
 
     @staticmethod
     def ordinal_scale(column_name, column_values):
